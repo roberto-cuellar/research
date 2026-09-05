@@ -1,0 +1,14 @@
+# Entorno Python del SEM — Python 3.14.0
+#
+# Versiones ANCLADAS con == (§10.1 punto 5). Un `>=` convierte una réplica
+# reproducible en una lotería.
+#
+# torch y lpips NO están aquí a propósito: §8.2 arranca la cascada visual en
+# SSIM (determinista, sin GPU) y LPIPS solo entra DESPUÉS de medir su latencia
+# en CPU. torch instala en variante +cpu en esta máquina, así que no usaría la
+# 4060 Ti. Medirlo antes de meterlo en el bucle.
+
+numpy==2.5.2
+scipy==1.18.1
+scikit-image==0.26.0     # aporta SSIM sin dependencias pesadas
+pillow==12.3.0

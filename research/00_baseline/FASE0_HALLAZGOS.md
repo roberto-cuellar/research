@@ -273,3 +273,66 @@ Con la línea base en verde y el inventario cerrado, el orden que menos riesgo a
 
 **Decisión abierta que sigue necesitando al humano** (§11.3.2): si los escenarios y trampas se
 construyen como geometría 3D en Blender o como planos texturizados con los tilesets CC0.
+
+---
+
+# ADENDA — 2026-09-05
+
+> Las secciones 1–8 de arriba se conservan **tal y como se escribieron**. Esta adenda
+> registra lo que se volvió a medir y en qué se equivocaba el documento original.
+> Borrar lo que se creyó destruiría el registro de por qué se creyó.
+
+## A.1 Correcciones a lo afirmado el 2026-09-04
+
+| Afirmación original | Medición del 2026-09-05 |
+|---|---|
+| `NO VERIFICADO` #3: "cuál de las dos instalaciones escucha en 9876" | ✅ **RESUELTO: Blender 5.2.** El puerto 9876 lo tiene el PID 25024 → `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`. Ambas instalaciones (5.0 y 5.2) existen y tienen `blender.exe`; la que escucha es la 5.2, la de la extensión oficial |
+| El repo `research` "contiene este documento" | 🔴 **Falso.** `PROMPT_MAESTRO.md` y `00_baseline/` estaban **untracked**. El repo tenía un único commit (`4cf41b3`) con solo el `README.md`. El brief no estaba versionado |
+| "Se probó en un venv real" (§3) | ⚠️ **La prueba fue válida pero no persistió.** El venv no existía en disco y el intérprete global solo tenía `pillow`, `pymupdf`, `pdfplumber`, `pypdfium2`. Se **recreó y reconfirmó**: numpy 2.5.2, scipy 1.18.1, scikit-image 0.26.0, pillow 12.3.0 instalan limpio en Python 3.14.0, y `skimage.metrics.structural_similarity` está disponible |
+| Candidatos VLM de §9.2 | 🔴 **Ninguno descargado.** Ollama solo tiene `qwen2.5-coder:7b` (4.7 GB), `qwen2.5-coder:latest` (mismo ID) y `gemma4:26b` (18 GB, no cabe en 8 GB). **No hay hoy ningún modelo de visión utilizable** |
+| Inventario de mecánicas (§5) | ✅ **Confirmado.** El pack CC0 está en `Documents\Games\PixelAdventureHardcore\PixelAdventureHardcore\Assets\Pixel Adventure 1\Assets\` con las 6 carpetas: `Background`, `Items`, `Main Characters`, `Other`, `Terrain`, `Traps` |
+
+## A.2 Riesgo nuevo detectado en el motor heredado
+
+`MrHector\game\src\*.js` es ESM, pero `game/package.json` **no declara `"type": "module"`**
+ni tiene `scripts`. Funciona solo porque Node ≥22.7 detecta sintaxis de módulo
+automáticamente. **Un CI con Node 20 rompería.** Al copiar los módulos al clon (Fase 5) se
+corrige en origen añadiendo el campo, y el workflow fija Node 22 explícitamente.
+
+## A.3 Decisiones de producto cerradas por el usuario
+
+1. **Repo:** el `.git` de `research/` se trasladó a la raíz de `open_code`. El remoto sigue
+   siendo `roberto-cuellar/research`; la credencial de GCM va por ruta de *remoto*, no de
+   disco, así que el enrutado `usehttppath` de las dos identidades no se tocó.
+2. **Runner:** ambos (opencode y Claude Code), con gate común. **Los workflows se crean y se
+   verifican en verde**; no se aceptan como YAML sin ejecutar.
+3. **Motor del clon:** copia a `games/pixel-borislov/`. `MrHector` permanece solo-lectura.
+4. **§11.3.2 — CERRADA:** escenarios y trampas como **planos texturizados con los tilesets
+   CC0 de 16×16**. No se modela geometría 3D de escenario.
+
+## A.4 Hallazgos de implementación
+
+- **`node:sqlite`** está disponible en Node 22.22.0 **sin flag**, pero emite
+  `ExperimentalWarning` en cada invocación y su API puede cambiar. Para el sustrato durable
+  de la memoria no compensa: se usa un índice JSON de `signature → offset`, con cero
+  dependencias. Migrar a sqlite solo con un dato que lo justifique.
+- **El normalizador de errores convierte todo dígito en `<N>`**, así que dos errores que solo
+  difieren en un número son —correctamente— la misma firma. Es la propiedad que hace que el
+  circuit breaker funcione, y hay un test que la fija.
+- **`no_frozen_writes` no puede tratar "aparece en el diff" como violación**: eso bloquea el
+  primer commit de un fichero recién congelado. La autoridad es el `sha256` del lock.
+
+## A.5 Lista `NO VERIFICADO` vigente
+
+| # | Qué | Estado |
+|---|---|---|
+| 1 | `gh` no instalado → no se puede confirmar que un workflow ejecute | 🔴 Abierto. `winget install --id GitHub.cli -e` |
+| 2 | `blender.exe` no está en el PATH → renders headless sin comprobar | 🔴 Abierto. Ruta conocida: `C:\Program Files\Blender Foundation\Blender 5.2\` |
+| 3 | ~~Cuál instalación escucha en 9876~~ | ✅ **Cerrado: Blender 5.2** |
+| 4 | Cómo se declara este addon MCP concreto en `opencode.jsonc` | 🔴 Abierto. La sintaxis `mcp` + `type` está verificada; el comando/URL para **este** addon, no |
+| 5 | Coste real de LPIPS en CPU | 🔴 Sin medir. La cascada arranca en SSIM |
+| 6 | Recorrido completo de escenas de la demo | ⚠️ Suplido por el inventario de assets |
+| 7 | Benchmark de VLMs (§9.2) | ⚠️ Pendiente, y ahora además **hace falta descargar los candidatos**: no hay ninguno |
+| 8 | `game/.github/copilot-instructions.md` y `docs/INDEX.md` sin leer en profundidad | ⚠️ Abierto. Condicionan cómo se integra el clon |
+| 9 | Sistema de hooks de opencode | 🔴 **Nuevo.** Sin verificar. El `pre-commit` de git sostiene el gate para ambos runners mientras tanto |
+| 10 | El workflow `verify.yml` nunca ha ejecutado | 🔴 **Nuevo.** Es un YAML, no un gate, hasta ver un run en verde |
