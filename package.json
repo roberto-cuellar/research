@@ -1,0 +1,13 @@
+{
+  "name": "sem",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sistema de Evolución Multimodal — columna vertebral (memoria, gobernanza, métricas)",
+  "engines": { "node": ">=22" },
+  "bin": { "sem": "tools/cli/sem.mjs" },
+  "scripts": {
+    "test": "node --test \"tools/tests/*.test.mjs\"",
+    "verify": "node governance/enforce/verify.mjs"
+  }
+}

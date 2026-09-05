@@ -1,0 +1,30 @@
+# --- dependencias y entornos ---
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# --- ledger host-privado (A.2: el CI falla si aparece trackeado) ---
+# attempts.jsonl es el registro forense crudo: NUNCA se versiona.
+# lessons.jsonl (destilado y corto) SI se versiona: es lo que entra al contexto.
+memory/attempts.jsonl
+memory/index.json
+memory/index.sqlite
+memory/*.tmp
+
+# --- salidas de test ---
+**/test-results/
+**/playwright-report/
+**/.playwright/
+**/blob-report/
+
+# --- artefactos de build y trabajo ---
+_work/
+dist/
+*.blend1
+*.bak
+
+# --- sistema ---
+Thumbs.db
+desktop.ini
+.DS_Store
