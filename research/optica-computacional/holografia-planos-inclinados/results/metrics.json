@@ -1,0 +1,58 @@
+{
+  "C2_M_mod_D": {
+    "afirmado": "M mod D == 0",
+    "obtenido": 0,
+    "replica": true
+  },
+  "C3_dz": {
+    "afirmado_m": 1.37e-05,
+    "obtenido_m": 1.0316158293130301e-05,
+    "delta_m": -3.383841706869698e-06,
+    "delta_relativo": -0.24699574502698526,
+    "replica": false,
+    "omega_que_lo_explicaria_deg": 35.79358776049518
+  },
+  "C3_restriccion_dz_mucho_mayor_que_lambda": {
+    "afirmado": "dz >> lambda",
+    "razon_obtenida": 16.297248488357507,
+    "criterio_propio": ">= 10x",
+    "replica": true
+  },
+  "parametros": {
+    "delta_x_m": 1.9e-05,
+    "M": 128,
+    "N": 128,
+    "D": 128,
+    "lambda_m": 6.33e-07,
+    "Z_m": 0.5,
+    "omega_deg": 28.5,
+    "Lx_m": 0.002432,
+    "Sd_m": 1.9e-05
+  },
+  "C1_metodo_4_pasos": {
+    "ejecuta_sin_error": true,
+    "holograma_shape": [
+      128,
+      128
+    ],
+    "holograma_finito": true,
+    "holograma_no_trivial": true,
+    "reconstruccion_finita": true,
+    "replica": null,
+    "nota": "ejecuta y produce holograma no trivial; equivalencia con el paper NO demostrada"
+  },
+  "C6_coste_computacional": {
+    "afirmado": "eta * O(u*M*N*(log M + log N))",
+    "fft_contadas": 256,
+    "eta_esperado": 256,
+    "fft_por_propagacion": 2,
+    "propagaciones": 128,
+    "coste_teorico_unidades": 58720256.0,
+    "replica": true,
+    "nota": "el conteo de FFT casa con D propagaciones x 2 FFT. El escalado O(MN log MN) es propiedad de la FFT, no del metodo."
+  },
+  "_meta": {
+    "segundos": 0.27,
+    "semilla": 0
+  }
+}

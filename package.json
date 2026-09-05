@@ -4,10 +4,31 @@
   "private": true,
   "type": "module",
   "description": "Sistema de Evolución Multimodal — columna vertebral (memoria, gobernanza, métricas)",
-  "engines": { "node": ">=22" },
-  "bin": { "sem": "tools/cli/sem.mjs" },
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "sem": "tools/cli/sem.mjs"
+  },
   "scripts": {
     "test": "node --test \"tools/tests/*.test.mjs\"",
     "verify": "node governance/enforce/verify.mjs"
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roberto-cuellar/research.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/roberto-cuellar/research/issues"
+  },
+  "homepage": "https://github.com/roberto-cuellar/research#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@playwright/test": "^1.63.0",
+    "zod": "^4.5.4"
   }
 }
