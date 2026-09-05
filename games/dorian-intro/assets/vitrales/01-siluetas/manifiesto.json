@@ -1,0 +1,32 @@
+{
+  "cuadro": "01-siluetas",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "capas": [
+    {
+      "capa": "fondo",
+      "png": "01-siluetas_fondo.png",
+      "parallax": 0.15
+    },
+    {
+      "capa": "medio",
+      "png": "01-siluetas_medio.png",
+      "parallax": 0.45
+    },
+    {
+      "capa": "figura",
+      "png": "01-siluetas_figura.png",
+      "parallax": 1.0
+    }
+  ],
+  "determinismo": {
+    "semilla": 0,
+    "muestras": 16,
+    "motor": "BLENDER_EEVEE"
+  },
+  "blend": "assets/blender/01-siluetas.blend",
+  "mascara": "mascaras/01-siluetas.png",
+  "paleta": "azul-frio"
+}

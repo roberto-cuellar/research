@@ -1,0 +1,32 @@
+{
+  "cuadro": "02-rey-vs-dragon",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "capas": [
+    {
+      "capa": "fondo",
+      "png": "02-rey-vs-dragon_fondo.png",
+      "parallax": 0.12
+    },
+    {
+      "capa": "medio",
+      "png": "02-rey-vs-dragon_medio.png",
+      "parallax": 0.4
+    },
+    {
+      "capa": "figura",
+      "png": "02-rey-vs-dragon_figura.png",
+      "parallax": 1.0
+    }
+  ],
+  "determinismo": {
+    "semilla": 0,
+    "muestras": 16,
+    "motor": "BLENDER_EEVEE"
+  },
+  "blend": "assets/blender/02-rey-vs-dragon.blend",
+  "mascara": "mascaras/02-rey-vs-dragon.png",
+  "paleta": "rojo-brasa"
+}

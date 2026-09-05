@@ -1,0 +1,58 @@
+project: games/dorian-intro
+objective: "Generar los seis vitrales de la intro de los Dorian y reproducirlos como cinematica con parallax y texto"
+
+# Esta es la PRIMERA metrica del repo que converge SOLA: la accion es mecanica
+# —hornear el siguiente cuadro que falte— asi que el bucle la sube sin que nadie
+# escriba codigo entre iteraciones. Las anteriores necesitaban un humano en medio.
+status: en_curso
+
+metrics:
+  - name: cuadros_horneados
+    kind: functional
+    verifier: tools/vitral/build_vitral.py
+    target: 6
+    direction: maximize
+    note: "Cuenta cuadros con manifiesto Y sus tres capas no vacias. Un PNG
+           transparente entero no cuenta: se puede generar sin que el shader
+           funcione."
+
+  - name: suite_cinematica
+    kind: functional
+    verifier: games/dorian-intro/tests/
+    target: 1
+    direction: maximize
+    note: "Guardia: el reproductor y el generador no pueden romperse mientras se
+           añaden cuadros."
+
+  - name: golden_cinematica
+    kind: visual
+    verifier: tests/visual/dorian.spec.mjs
+    reference: tests/visual/dorian.spec.mjs-snapshots/dorian-cuadro-01-win32.png
+    target: 1
+    direction: maximize
+
+stopping:
+  max_iterations: 25
+  patience: 5
+  epsilon: 0.005
+  divergence_k: 3
+  max_wallclock_min: 60
+
+# --- lo que hace reutilizable la suite --------------------------------------
+suite:
+  generador: tools/vitral/
+  entrada:
+    guion: assets/guion.json          # que se cuenta y en que orden
+    mascaras: assets/mascaras/*.png   # la FORMA. Blanco figura, gris medio, negro fondo
+    paletas: assets/paletas/*.json    # el COLOR. Cinco tonos de oscuro a claro
+    tweaks: tweaks.json               # el RITMO. Nada de tiempo vive en el codigo
+  salida:
+    blends: assets/blender/*.blend    # editables a mano; el script no los pisa sin --force
+    capas: assets/vitrales/<id>/*.png # tres por cuadro, con alfa, para el parallax
+
+restricciones:
+  - "El .blend de un cuadro es del usuario en cuanto lo abre. build_vitral.py se
+     niega a sobrescribirlo sin --force, y --solo-hornear respeta sus ediciones."
+  - "Las mascaras generadas son ARTE DE RELLENO: siluetas de primitivas para
+     cerrar el pipeline. Repintarlas no exige tocar nada mas."
+  - "Ningun tiempo de animacion en el codigo: todos en tweaks.json (§11.1.4 regla 3)."

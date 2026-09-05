@@ -1,0 +1,13 @@
+{
+  "id": "dorado-sagrado",
+  "_nota": "De oscuro a claro. El shader mapea la luminancia del vitral sobre esta rampa: el vidrio no tiene sombreado, tiene COLOR y luz atravesandolo.",
+  "rampa": [
+    "#2b1c04",
+    "#7a5410",
+    "#c99a26",
+    "#ffd76a",
+    "#fff3cf"
+  ],
+  "plomo": "#0a0a0c",
+  "halo": "#fff3cf"
+}

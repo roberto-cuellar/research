@@ -1,0 +1,32 @@
+{
+  "cuadro": "06-reino",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "capas": [
+    {
+      "capa": "fondo",
+      "png": "06-reino_fondo.png",
+      "parallax": 0.18
+    },
+    {
+      "capa": "medio",
+      "png": "06-reino_medio.png",
+      "parallax": 0.48
+    },
+    {
+      "capa": "figura",
+      "png": "06-reino_figura.png",
+      "parallax": 1.0
+    }
+  ],
+  "determinismo": {
+    "semilla": 0,
+    "muestras": 16,
+    "motor": "BLENDER_EEVEE"
+  },
+  "blend": "assets/blender/06-reino.blend",
+  "mascara": "mascaras/06-reino.png",
+  "paleta": "dorado-sagrado"
+}

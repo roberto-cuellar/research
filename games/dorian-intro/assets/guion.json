@@ -1,0 +1,62 @@
+{
+  "id": "dorian-intro",
+  "titulo": "La Era de los Cataclismos",
+  "_nota": "El GUION es datos. Cambiar el texto, el orden o los tiempos de un cuadro NO toca una linea de codigo (regla 3 del pipeline heredado: datos frente a codigo).",
+
+  "cuadros": [
+    {
+      "id": "01-siluetas",
+      "texto": "Hace ya un tiempo, en la Era de los Cataclismos, hubo una batalla que definiría la historia de los Dorian.",
+      "mascara": "mascaras/01-siluetas.png",
+      "paleta": "paletas/azul-frio.json",
+      "composicion": "Dos siluetas de guerreros enfrentadas, una grande y una pequeña, como David y Goliat.",
+      "parallax": { "fondo": 0.15, "medio": 0.45, "figura": 1.0 },
+      "acento": "#7fb2e5"
+    },
+    {
+      "id": "02-rey-vs-dragon",
+      "texto": "El Rey de los Dorian, Sir Levin McCollin, se enfrentó con valentía al Rey de las Islas de Piedra del Dragón, Muffón.\nPero…",
+      "mascara": "mascaras/02-rey-vs-dragon.png",
+      "paleta": "paletas/rojo-brasa.json",
+      "composicion": "Un Rey enfrentandose a un dragon antropomorfico, siendo derrotado.",
+      "parallax": { "fondo": 0.12, "medio": 0.40, "figura": 1.0 },
+      "acento": "#e5a03f"
+    },
+    {
+      "id": "03-caida",
+      "texto": "Sir Levin McCollin cayó en franca lid. Destruyendo, para siempre, el legado de los Dorian y siendo invadidos por las tropas de Muffón.",
+      "mascara": "mascaras/03-caida.png",
+      "paleta": "paletas/rojo-brasa.json",
+      "composicion": "La pata del dragon aplastando la cabeza de Sir Levin mientras ruge y bota fuego. Atras, la silueta de un ejercito que se acerca.",
+      "parallax": { "fondo": 0.10, "medio": 0.35, "figura": 1.0 },
+      "acento": "#d8452f"
+    },
+    {
+      "id": "04-heroe",
+      "texto": "Un buen día, un héroe de la estirpe de los Dorian llegó desde las montañas, luego de rescatar a una doncella que tenía en su estirpe el sello de los ángeles.",
+      "mascara": "mascaras/04-heroe.png",
+      "paleta": "paletas/noche-lunar.json",
+      "composicion": "Un heroe de capa y espada de espalda, silueta a contraluz de la luna, en una montaña. Abajo se ve el reino.",
+      "parallax": { "fondo": 0.20, "medio": 0.50, "figura": 1.0 },
+      "acento": "#9fd8f0"
+    },
+    {
+      "id": "05-batalla",
+      "texto": "La batalla fue caótica. Pero gracias al poder de la doncella, el héroe logró librar la batalla a favor de su estirpe.",
+      "mascara": "mascaras/05-batalla.png",
+      "paleta": "paletas/dorado-sagrado.json",
+      "composicion": "El guerrero se lanza contra la cabeza del dragon. El dragon lanza fuego en un grito agonico. La doncella, en un halo de luz, le pasa poder al guerrero.",
+      "parallax": { "fondo": 0.15, "medio": 0.55, "figura": 1.0 },
+      "acento": "#ffd76a"
+    },
+    {
+      "id": "06-reino",
+      "texto": "Los Dorian volverían a reinar; esta vez junto a los ángeles. El reino quedaría así protegido por la espada y la magia. La felicidad se haría.\nHasta que un día…",
+      "mascara": "mascaras/06-reino.png",
+      "paleta": "paletas/dorado-sagrado.json",
+      "composicion": "El heroe y la doncella de espaldas, cuadro iluminado. Al fondo, el reino celebrando.",
+      "parallax": { "fondo": 0.18, "medio": 0.48, "figura": 1.0 },
+      "acento": "#ffe9a8"
+    }
+  ]
+}

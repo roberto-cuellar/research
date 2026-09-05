@@ -9,7 +9,7 @@
 // devolviera true/false le quitaría al bucle su criterio de convergencia.
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** Extrae el resumen de `node --test`. -1 si no se pudo leer: no se inventa. */
@@ -18,12 +18,19 @@ function contarTests(salida) {
   return { pass: n(/^# pass (\d+)$/m), fail: n(/^# fail (\d+)$/m), total: n(/^# tests (\d+)$/m) };
 }
 
-function correr(cmd, args, cwd, timeout = 600_000) {
+/**
+ * @param shell `true` hace falta para `npm`/`npx` en Windows, que son .cmd.
+ *              Debe ser `false` para un .exe cuya RUTA LLEVA ESPACIOS: con
+ *              shell:true la línea se re-parsea y "C:/Program Files/..." se
+ *              parte en dos argumentos. Costó tres fallos idénticos y una
+ *              cuarentena del breaker descubrirlo.
+ */
+function correr(cmd, args, cwd, timeout = 600_000, shell = process.platform === 'win32') {
   try {
     const salida = execFileSync(cmd, args, {
       cwd, encoding: 'utf8', timeout,
       stdio: ['ignore', 'pipe', 'pipe'],
-      shell: process.platform === 'win32',
+      shell,
     });
     return { salida, codigo: 0 };
   } catch (e) {
@@ -153,11 +160,116 @@ export function ejecutorTrampas({ raiz, proyecto, inventario = 'assets/trampas.j
   };
 }
 
+
+/** Ruta de Blender. No esta en el PATH todavia (TDB-005 de pixel-borislov). */
+const BLENDER = process.env.BLENDER_EXE
+  ?? 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe';
+
+/**
+ * Vitrales: la primera métrica del repo que converge SOLA.
+ *
+ * Las anteriores solo MEDÍAN, y hacía falta un humano escribiendo código entre
+ * iteraciones para que subieran. Aquí la acción es mecánica —hornear el
+ * siguiente cuadro que falte— así que el ejecutor la realiza y luego mide. El
+ * bucle sube de 1 a 6 sin intervención.
+ *
+ * Sigue sin JUZGAR: devuelve cuántos hay horneados, y quién decide si bastan es
+ * `evaluarParada` contra el `target` del GOALS.
+ *
+ * Un cuadro cuenta solo si tiene manifiesto Y sus tres capas con contenido
+ * VISIBLE. Un PNG enteramente transparente se genera igual de bien con el
+ * shader roto, así que contar ficheros permitiría converger sin vitral.
+ */
+export function ejecutorVitrales({ raiz, proyecto, guion = 'assets/guion.json' }) {
+  const cwd = join(raiz, proyecto);
+  return async () => {
+    const rutaGuion = join(cwd, guion);
+    if (!existsSync(rutaGuion)) {
+      return { valor: null, error: `sin guion: ${guion}`, operacion: 'vitrales' };
+    }
+    const { cuadros } = JSON.parse(readFileSync(rutaGuion, 'utf8'));
+
+    const completo = (id) => {
+      const dir = join(cwd, 'assets', 'vitrales', id);
+      if (!existsSync(join(dir, 'manifiesto.json'))) return false;
+      let man;
+      try { man = JSON.parse(readFileSync(join(dir, 'manifiesto.json'), 'utf8')); }
+      catch { return false; }
+      if (!Array.isArray(man.capas) || man.capas.length !== 3) return false;
+      return man.capas.every((c) => {
+        const png = join(dir, c.png);
+        // 2 KB: un PNG totalmente transparente de 1280x720 comprime por debajo
+        // de eso. No es una medida de calidad, es un detector de vacío.
+        return existsSync(png) && statSync(png).size > 2048;
+      });
+    };
+
+    const hechos = cuadros.filter((c) => completo(c.id)).map((c) => c.id);
+    const faltan = cuadros.filter((c) => !completo(c.id));
+
+    // --- ACTUAR: hornear el siguiente que falte -------------------------
+    let horneado = null;
+    let fallo = null;
+    if (faltan.length) {
+      const siguiente = faltan[0];
+      if (!existsSync(BLENDER)) {
+        return {
+          valor: hechos.length,
+          error: `no se encuentra Blender en ${BLENDER}. Define BLENDER_EXE.`,
+          operacion: 'blender',
+          exitCode: 127,
+        };
+      }
+      const { salida, codigo } = correr(BLENDER, [
+        '--background', '--python', join(raiz, 'tools', 'vitral', 'build_vitral.py'),
+        '--', '--guion', rutaGuion, '--cuadro', siguiente.id,
+        // shell:false — la ruta de Blender lleva espacios.
+      ], raiz, 900_000, false);
+
+      if (codigo === 0 && completo(siguiente.id)) {
+        horneado = siguiente.id;
+        hechos.push(siguiente.id);
+      } else {
+        fallo = `no se pudo hornear ${siguiente.id}`;
+        // Es un fallo REAL del ejecutor: la acción no se completó. Que pase por
+        // el breaker es lo correcto, porque reintentarla sin cambiar nada daría
+        // exactamente el mismo resultado.
+        return {
+          valor: hechos.length,
+          error: `${fallo} (exit ${codigo})`,
+          operacion: `hornear:${siguiente.id}`,
+          exitCode: codigo,
+          evidencia: [salida.slice(-1500)],
+        };
+      }
+    }
+
+    return {
+      valor: hechos.length,
+      metricas: { declarados: cuadros.length, pendientes: cuadros.length - hechos.length },
+      resumen: horneado
+        ? `horneado ${horneado} · ${hechos.length}/${cuadros.length}`
+        : `${hechos.length}/${cuadros.length} cuadros completos`,
+      evidencia: hechos.map((id) => `assets/vitrales/${id}/manifiesto.json`),
+      capturas: horneado
+        ? [{
+            ruta: join(cwd, 'assets', 'vitrales', horneado, `${horneado}_figura.png`),
+            tipo: 'render',
+            metricas: { cuadro_index: hechos.length },
+            contexto: { cuadro: horneado, capa: 'figura' },
+          }]
+        : [],
+      accion: { type: 'build', target: horneado ?? 'ninguno', summary: 'horneado de vitral' },
+    };
+  };
+}
+
 /**
  * Elige el ejecutor por la forma de la métrica.
  * Si no hay ninguno, se dice — no se inventa uno que devuelva cualquier cosa.
  */
 export function ejecutorPara({ raiz, proyecto, metrica }) {
+  if (metrica.verifier.includes('tools/vitral')) return ejecutorVitrales({ raiz, proyecto });
   if (/\/traps\/?$/.test(metrica.verifier)) return ejecutorTrampas({ raiz, proyecto });
   if (metrica.kind === 'visual' || /\.spec\.(mjs|ts|js)$/.test(metrica.verifier)) {
     return ejecutorVisual({

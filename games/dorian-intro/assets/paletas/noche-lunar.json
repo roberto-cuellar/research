@@ -1,0 +1,13 @@
+{
+  "id": "noche-lunar",
+  "_nota": "De oscuro a claro. El shader mapea la luminancia del vitral sobre esta rampa: el vidrio no tiene sombreado, tiene COLOR y luz atravesandolo.",
+  "rampa": [
+    "#050a18",
+    "#122246",
+    "#2f4d8f",
+    "#7f9fd6",
+    "#cfd9f2"
+  ],
+  "plomo": "#0a0a0c",
+  "halo": "#cfd9f2"
+}

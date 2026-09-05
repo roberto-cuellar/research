@@ -1,0 +1,32 @@
+{
+  "cuadro": "03-caida",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "capas": [
+    {
+      "capa": "fondo",
+      "png": "03-caida_fondo.png",
+      "parallax": 0.1
+    },
+    {
+      "capa": "medio",
+      "png": "03-caida_medio.png",
+      "parallax": 0.35
+    },
+    {
+      "capa": "figura",
+      "png": "03-caida_figura.png",
+      "parallax": 1.0
+    }
+  ],
+  "determinismo": {
+    "semilla": 0,
+    "muestras": 16,
+    "motor": "BLENDER_EEVEE"
+  },
+  "blend": "assets/blender/03-caida.blend",
+  "mascara": "mascaras/03-caida.png",
+  "paleta": "rojo-brasa"
+}

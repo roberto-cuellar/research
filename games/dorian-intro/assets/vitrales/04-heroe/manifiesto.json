@@ -1,0 +1,32 @@
+{
+  "cuadro": "04-heroe",
+  "resolucion": [
+    1280,
+    720
+  ],
+  "capas": [
+    {
+      "capa": "fondo",
+      "png": "04-heroe_fondo.png",
+      "parallax": 0.2
+    },
+    {
+      "capa": "medio",
+      "png": "04-heroe_medio.png",
+      "parallax": 0.5
+    },
+    {
+      "capa": "figura",
+      "png": "04-heroe_figura.png",
+      "parallax": 1.0
+    }
+  ],
+  "determinismo": {
+    "semilla": 0,
+    "muestras": 16,
+    "motor": "BLENDER_EEVEE"
+  },
+  "blend": "assets/blender/04-heroe.blend",
+  "mascara": "mascaras/04-heroe.png",
+  "paleta": "noche-lunar"
+}
