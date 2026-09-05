@@ -41,8 +41,12 @@ jobs:
         run: node governance/enforce/verify.mjs
 
       # gitleaks con SHA pinneado, no con tag móvil: un tag puede reapuntarse.
+      # SHA verificado contra la API de GitHub el 2026-09-05:
+      #   GET /repos/gitleaks/gitleaks-action/tags -> v2.3.9 = ff98106e...
+      # gitleaks-action v2 solo exige GITLEAKS_LICENSE en repos de organización;
+      # este es personal, así que no hace falta.
       - name: Escaneo de secretos en todo el historial
-        uses: gitleaks/gitleaks-action@44c470ffc35caa8b1eb3e8012ca53c2f9bea4eb5 # v2.3.9
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
