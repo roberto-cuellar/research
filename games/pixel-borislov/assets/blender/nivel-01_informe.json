@@ -1,0 +1,17 @@
+{
+  "nivel": "nivel-01",
+  "blend": "C:\\Users\\Roberto\\Documents\\COMPANYS\\CuellarLozano\\open_code\\games\\pixel-borislov\\assets\\blender\\nivel-01.blend",
+  "tiles": 46,
+  "fondos": 1,
+  "marcadores": 3,
+  "determinismo": {
+    "semilla": 0,
+    "muestras": 32,
+    "resolucion": [
+      960,
+      540
+    ],
+    "denoiser": false,
+    "dispositivo": "CPU"
+  }
+}

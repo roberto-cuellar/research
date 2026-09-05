@@ -1,0 +1,335 @@
+{
+  "id": "nivel-01",
+  "nombre": "Tramo de prueba",
+  "tileset": "tiles/terrain_16.png",
+  "color_fondo": [
+    0.1,
+    0.11,
+    0.14
+  ],
+  "camara": {
+    "x": 11.0,
+    "y": 5.0,
+    "ancho_tiles": 26
+  },
+  "terreno": [
+    {
+      "x": 0,
+      "y": 0,
+      "tile": 6,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 0,
+      "y": -1,
+      "tile": 28,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 1,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 1,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 2,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 2,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 3,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 3,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 4,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 4,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 5,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 5,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 6,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 6,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 7,
+      "y": 0,
+      "tile": 8,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 7,
+      "y": -1,
+      "tile": 30,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 11,
+      "y": 0,
+      "tile": 6,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 11,
+      "y": -1,
+      "tile": 28,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 12,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 12,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 13,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 13,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 14,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 14,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 15,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 15,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 16,
+      "y": 0,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 16,
+      "y": -1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 17,
+      "y": 0,
+      "tile": 8,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 17,
+      "y": -1,
+      "tile": 30,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 6,
+      "y": 4,
+      "tile": 6,
+      "surface": "MADERA"
+    },
+    {
+      "x": 7,
+      "y": 4,
+      "tile": 7,
+      "surface": "MADERA"
+    },
+    {
+      "x": 8,
+      "y": 4,
+      "tile": 7,
+      "surface": "MADERA"
+    },
+    {
+      "x": 9,
+      "y": 4,
+      "tile": 8,
+      "surface": "MADERA"
+    },
+    {
+      "x": 18,
+      "y": 2,
+      "tile": 6,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 18,
+      "y": 1,
+      "tile": 28,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 19,
+      "y": 2,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 19,
+      "y": 1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 20,
+      "y": 2,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 20,
+      "y": 1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 21,
+      "y": 2,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 21,
+      "y": 1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 22,
+      "y": 2,
+      "tile": 7,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 22,
+      "y": 1,
+      "tile": 29,
+      "surface": "TIERRA"
+    },
+    {
+      "x": 23,
+      "y": 2,
+      "tile": 8,
+      "surface": "HIERBA"
+    },
+    {
+      "x": 23,
+      "y": 1,
+      "tile": 30,
+      "surface": "TIERRA"
+    }
+  ],
+  "fondos": [
+    {
+      "nombre": "lejano",
+      "textura": "fondos/blue.png",
+      "parallax": 0.25,
+      "x": -6.0,
+      "y": -4.0,
+      "z_profundidad": -12.0,
+      "ancho": 40.0,
+      "alto": 24.0,
+      "repeticiones_u": 10.0,
+      "repeticiones_v": 6.0
+    }
+  ],
+  "marcadores": [
+    {
+      "nombre": "spawn",
+      "tipo": "start",
+      "x": 1,
+      "y": 1
+    },
+    {
+      "nombre": "checkpoint",
+      "tipo": "checkpoint",
+      "x": 13,
+      "y": 1
+    },
+    {
+      "nombre": "meta",
+      "tipo": "end",
+      "x": 22,
+      "y": 3
+    }
+  ],
+  "paleta": {
+    "hierba_izq": 6,
+    "hierba": 7,
+    "hierba_der": 8,
+    "tierra_izq": 28,
+    "tierra": 29,
+    "tierra_der": 30
+  }
+}

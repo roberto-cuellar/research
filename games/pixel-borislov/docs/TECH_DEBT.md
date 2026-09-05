@@ -37,7 +37,15 @@ y romper baselines **sin que cambie una línea de código**.
 
 **Mitigación:** en CI sí se usa el Chromium empaquetado.
 
-### TDB-004 — Sin render determinista todavía
-`blender.exe` no está en el PATH y la escena de autoría no tiene cámara ni luces.
-Hasta que existan escenas con cámara fija, semilla fija e iluminación fija, los
-niveles 1–3 de la cascada visual (§8.2) producen falsos positivos sobre renders 3D.
+### ~~TDB-004 — Sin render determinista~~ · CERRADA 2026-09-05
+`tools/build_scenario.py` genera escenas con cámara ortográfica fija, semilla
+fija, sin denoiser y en CPU. **Verificado: dos renders independientes dan
+MSE = 0** sobre una imagen no trivial (media 183.9, 2929 colores).
+
+El matiz que importa: la primera comprobación dio MSE = 0 sobre un fotograma
+**negro**, y no demostraba nada. Un render en blanco también es determinista.
+Por eso la verificación incluye ahora que la imagen no sea trivial.
+
+### TDB-005 — `blender.exe` sigue fuera del PATH
+Los scripts se invocan por ruta absoluta a `C:\Program Files\Blender Foundation\Blender 5.2\`.
+Funciona, pero ata los comandos a esa ruta y a esa versión.
