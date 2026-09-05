@@ -1,6 +1,60 @@
 {
   "$schema": "https://opencode.ai/config.json",
 
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": { "baseURL": "http://localhost:11434/v1" },
+      "models": {
+        "qwen2.5-coder:7b": {
+          "name": "Coder 7B · codigo",
+          "tool_call": true,
+          "reasoning": false,
+          "attachment": false,
+          "modalities": { "input": ["text"], "output": ["text"] },
+          "limit": { "context": 32768, "output": 8192 }
+        },
+
+        "qwen3-vl:4b-instruct": {
+          "name": "VL 4B · descriptor visual (100% GPU)",
+          "tool_call": true,
+          "reasoning": false,
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "limit": { "context": 8192, "output": 2048 }
+        },
+
+        "qwen3-vl:8b-instruct": {
+          "name": "VL 8B · mas capacidad, 11% en CPU",
+          "tool_call": true,
+          "reasoning": false,
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "limit": { "context": 4096, "output": 2048 }
+        },
+
+        "minicpm-v4.5:8b": {
+          "name": "MiniCPM-V 4.5 · texto denso y OCR",
+          "tool_call": false,
+          "reasoning": false,
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "limit": { "context": 4096, "output": 2048 }
+        },
+
+        "gemma4:12b": {
+          "name": "Gemma4 12B · NO CABE, 31% en CPU",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "limit": { "context": 4096, "output": 2048 }
+        }
+      }
+    }
+  },
+
   "mcp": {
     "blender": {
       "type": "local",

@@ -31,3 +31,6 @@ desktop.ini
 node_modules/
 test-results/
 playwright-report/
+
+# Registro visual: el JSONL es evidencia versionable, las imagenes no
+games/*/experiments/capturas/

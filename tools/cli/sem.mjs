@@ -14,6 +14,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { Memoria } from '../lib/memory.mjs';
+import { Bucle, RAZON } from '../lib/bucle.mjs';
+import { RegistroVisual } from '../lib/capturas.mjs';
 import { readJsonl } from '../lib/store.mjs';
 import { errorSignature, taskSignature } from '../lib/signature.mjs';
 
@@ -191,6 +193,87 @@ async function cmdGoals(args) {
   out(await readFile(ruta, 'utf8'));
 }
 
+
+async function cmdRun(args) {
+  const proyecto = args[0];
+  if (!proyecto) { err('uso: sem run <proyecto> [--metrica <nombre>] [--dry-run]'); process.exit(2); }
+
+  const metrica = args.includes('--metrica') ? args[args.indexOf('--metrica') + 1] : null;
+  const bucle = new Bucle({ raiz: RAIZ, proyecto });
+
+  let objetivo;
+  try {
+    objetivo = await bucle.cargarObjetivo({ metrica });
+  } catch (e) {
+    err(`${C.x}${e.message}${C.r}`);
+    process.exit(1);
+  }
+
+  out(`${C.b}sem run${C.r} ${proyecto}
+`);
+  out(`  métrica    ${objetivo.name} -> ${objetivo.target} (${objetivo.direction})`);
+  out(`  verificador ${objetivo.verifier}`);
+  out(`  parada     max_iter ${objetivo.max_iterations} · patience ${objetivo.patience} `
+    + `· epsilon ${objetivo.epsilon} · divergence_k ${objetivo.divergence_k}`);
+
+  if (objetivo.bloqueo) {
+    out(`
+${C.a}BLOQUEADO por decisión de producto (§6.2.3)${C.r}`);
+    out(`  ${objetivo.bloqueo.pregunta}`);
+    out(`
+  Se registra la pregunta y se libera el bloqueo. El agente no adivina.`);
+    process.exit(3);
+  }
+
+  // Lo que el bucle inyectaría al planificador antes de actuar.
+  const { firma, lecciones } = await bucle.consultarMemoria({
+    dominio: proyecto.split('/')[0], sujeto: objetivo.name,
+  });
+  out(`
+${C.b}Memoria${C.r} ${C.dim}(consultada ANTES de actuar, §7.4)${C.r}`);
+  out(`  task_signature: ${firma}`);
+  if (!lecciones.length) out(`${C.dim}  sin lecciones previas para esta tarea${C.r}`);
+  else lecciones.forEach((l) => out(`  · [${l.hits} golpes] ${l.lesson.slice(0, 100)}`));
+
+  out(`
+${C.a}El ejecutor de acciones aún no está conectado.${C.r}`);
+  out(`${C.dim}  El motor del bucle está completo y probado (criterios de parada,`);
+  out(`  breaker y registro visual). Lo que falta es quién ACTÚA en el paso [4]:`);
+  out(`  el puente nivel->motor y el punto de entrada del juego.`);
+  out(`  §14.1: no se afirma que algo funciona sin haberlo ejecutado.${C.r}`);
+  process.exit(3);
+}
+
+async function cmdCapturas(args) {
+  const proyecto = args[0];
+  if (!proyecto) { err('uso: sem capturas <proyecto>'); process.exit(2); }
+  const reg = new RegistroVisual(join(RAIZ, proyecto));
+  const s = await reg.stats();
+  out(`${C.b}Registro visual${C.r} ${proyecto}
+`);
+  tabla([{
+    registradas: s.registradas,
+    'imágenes únicas': s.imagenes_unicas,
+    'ahorro por dedup': s.ahorro_por_dedup,
+    'KB en disco': Math.round(s.bytes_en_disco / 1024),
+  }]);
+  const h = await reg.historial({});
+  if (!h.length) { out(`
+${C.dim}sin capturas registradas todavía${C.r}`); return; }
+  out(`
+${C.b}Historial${C.r}`);
+  tabla(h.slice(-15).map((e) => ({
+    iter: e.iteracion, tipo: e.tipo, sha: e.sha256.slice(0, 10),
+    dim: e.dimensiones ? `${e.dimensiones.ancho}x${e.dimensiones.alto}` : '—',
+    metricas: Object.entries(e.metricas ?? {}).map(([k, v]) => `${k}=${v}`).join(' ') || '—',
+    vlm: e.descripcion_vlm ? `${e.descripcion_vlm.slice(0, 34)}…` : '—',
+  })));
+  const c = await reg.cambios({ proyecto: h[0].proyecto });
+  const sin = c.filter((x) => !x.cambio).length;
+  if (c.length) out(`
+${C.dim}${sin} de ${c.length} transiciones sin cambio visual alguno${C.r}`);
+}
+
 function cmdNoImplementado(nombre, fase) {
   err(`${C.a}'sem ${nombre}' aún no está implementado${C.r} — llega en la ${fase}.`);
   err(`${C.dim}§14.1: no se afirma que algo funciona sin haberlo ejecutado.${C.r}`);
@@ -210,7 +293,6 @@ ${C.b}Disponible${C.r}
 ${C.b}Pendiente${C.r} ${C.dim}(no fingir que existe)${C.r}
   sem lock <archivo>            congelar en GOVERNANCE.lock.yml     → Fase 2
   sem approve <solicitud>       registrar aprobación humana          → Fase 2
-  sem run <proyecto>            ejecutar el bucle de convergencia    → Fase 5
   sem bench vlm                 benchmark de modelos de visión       → Fase 4
   sem report <proyecto>         informe afirmado vs. obtenido        → Fase 5
 
@@ -232,8 +314,9 @@ try {
       break;
     case 'lock': cmdNoImplementado('lock', 'Fase 2'); break;
     case 'approve': cmdNoImplementado('approve', 'Fase 2'); break;
-    case 'run': cmdNoImplementado('run', 'Fase 5'); break;
+    case 'run': await cmdRun([sub, ...resto].filter(Boolean)); break;
     case 'bench': cmdNoImplementado('bench', 'Fase 4'); break;
+    case 'capturas': await cmdCapturas([sub, ...resto].filter(Boolean)); break;
     case 'report': cmdNoImplementado('report', 'Fase 5'); break;
     case undefined: case '-h': case '--help': case 'help': ayuda(); break;
     default: err(`comando desconocido: ${cmd}`); ayuda(); process.exit(2);
