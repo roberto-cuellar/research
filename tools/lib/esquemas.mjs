@@ -16,7 +16,7 @@ import { dirname, join } from 'node:path';
 export const CHECKS_IMPLEMENTADOS = new Set([
   'lock_integrity', 'no_frozen_writes', 'ledger_private',
   'secrets_clean', 'tests_green', 'pass_to_pass', 'fail_to_pass',
-  'research_contract', 'game_contract',
+  'policy_schemas', 'research_contract', 'game_contract',
 ]);
 
 const ESTADOS_CLAIM = ['verificable', 'no_verificable_con_recursos_disponibles'];

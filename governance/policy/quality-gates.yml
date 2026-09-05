@@ -19,6 +19,11 @@ gate:
     - tests_green           # la suite completa pasa
     - pass_to_pass          # los tests que ya pasaban siguen pasando
     - fail_to_pass          # al menos un test que fallaba ahora pasa
+    # Anadidos el 2026-09-05 con aprobacion registrada en governance/approvals/.
+    # Sin ellos la gobernanza de los dos tracks estaba probada pero NO aplicada.
+    - policy_schemas        # los .yml de politica validan contra su esquema
+    - research_contract     # §10.1 ejecutable: CLAIMS, requirements anclado, metrics
+    - game_contract         # §14.11c: nada del laberinto, nada escrito en MrHector
 
   # Las condiciones que no aplican todavía se declaran, pero desactivadas y con
   # motivo. §14.1: no se finge que un gate existe antes de poder ejecutarlo.

@@ -1,0 +1,28 @@
+# Registro de desbloqueo — §8.1.5
+#
+# El agente propuso el cambio y NO lo aplico hasta este registro (§14.5).
+
+approved_by: roberto-cuellar
+approved_at: "2026-09-05T02:59:17Z"
+file: governance/policy/quality-gates.yml
+old_sha256: "d4a4b031d9cc5991bff88f9ae963a45376c3907e337acc69f1cbd40d151323fd"
+new_sha256: "2823c2249c49d140452f8ec71d95c5040af83b1f0d9d3cacda080d5b00952bee"
+
+reason: >-
+  Anadir policy_schemas, research_contract y game_contract a gate.required.
+  Los tres checks estan implementados y probados (Fase 2c, 68 tests en verde),
+  pero mientras no esten en required el gate no los exige: la gobernanza de los
+  dos tracks quedaria probada pero no aplicada.
+
+cambio:
+  gate.required:
+    antes: [lock_integrity, no_frozen_writes, secrets_clean, ledger_private, tests_green, pass_to_pass, fail_to_pass]
+    despues: [lock_integrity, no_frozen_writes, secrets_clean, ledger_private, tests_green, pass_to_pass, fail_to_pass, policy_schemas, research_contract, game_contract]
+
+evidence:
+  - tools/tests/gobernanza.test.mjs
+  - "node governance/enforce/verify.mjs --only policy_schemas,research_contract,game_contract -> verde"
+
+nota: >-
+  El cambio ENDURECE el gate, no lo relaja. Un desbloqueo que aflojara una
+  condicion exigiria mas justificacion que este.

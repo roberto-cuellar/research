@@ -428,8 +428,18 @@ if (args.includes('--baseline')) {
 // Qué se exige viene de quality-gates.yml. Si el fichero no está, fallo cerrado.
 let requeridos = ['lock_integrity', 'no_frozen_writes', 'ledger_private', 'secrets_clean', 'tests_green'];
 if (existsSync(GATES)) {
-  const bloque = readFileSync(GATES, 'utf8').match(/^\s*required:\n((?:\s+-\s+\w+.*\n)+)/m);
-  if (bloque) requeridos = [...bloque[1].matchAll(/-\s+(\w+)/g)].map((m) => m[1]);
+  // Se parsea, no se saca con una regex. La anterior exigía que las entradas de
+  // `required` fueran consecutivas, así que un simple COMENTARIO en medio de la
+  // lista truncaba el gate en silencio: se quedaba con las primeras y dejaba de
+  // ejecutar el resto sin decir nada. Un gate que se recorta solo es peor que
+  // uno que falla.
+  const cfg = parseYaml(readFileSync(GATES, 'utf8'));
+  if (Array.isArray(cfg?.gate?.required) && cfg.gate.required.length) {
+    requeridos = cfg.gate.required;
+  } else {
+    console.error('quality-gates.yml no declara gate.required — sin política no hay gate.');
+    process.exit(1);
+  }
 } else {
   console.error(`${C.x}✗${C.r} falta quality-gates.yml — sin política no hay gate.`);
   process.exit(1);

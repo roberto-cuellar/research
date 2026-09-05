@@ -21,7 +21,7 @@ frozen:
     reason: "Capa 1 de la gobernanza. Si el agente puede reescribir su propio contrato, no hay contrato."
     unlock_requires: human_approval
   - path: governance/policy/quality-gates.yml
-    sha256: "d4a4b031d9cc5991bff88f9ae963a45376c3907e337acc69f1cbd40d151323fd"
+    sha256: "2823c2249c49d140452f8ec71d95c5040af83b1f0d9d3cacda080d5b00952bee"
     frozen_at: "2026-09-05"
     reason: "Define el AND booleano del gate. Relajarlo es exactamente el fallo que previene."
     unlock_requires: human_approval
