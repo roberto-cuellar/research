@@ -1,0 +1,158 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Los Dorian — intro</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden}
+  #escena{position:fixed;inset:0;display:grid;place-items:center}
+  canvas{display:block;background:#000}
+  #pie{position:fixed;left:0;right:0;bottom:0;font:13px monospace;color:#556;
+       padding:6px 10px;display:flex;gap:16px;justify-content:center;opacity:.5}
+</style>
+<div id="escena"><canvas id="c"></canvas></div>
+<div id="pie">
+  <span id="info">cargando…</span>
+  <span>Espacio: saltar cuadro · Enter: reiniciar</span>
+</div>
+
+<script type="module">
+import { duracionCuadro, duracionTotal, estadoEn, inicioDe } from './src/c_cinematica.js';
+
+const guion  = await (await fetch('./assets/guion.json')).json();
+const tweaks = await (await fetch('./tweaks.json')).json();
+
+const [W, H] = tweaks.global.resolucion;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+cv.width = W; cv.height = H;
+// Tamaño de DIBUJO fijo; el CSS solo escala. Si el buffer dependiera del
+// viewport, dos capturas del mismo instante saldrían distintas.
+const ajustar = () => {
+  const k = Math.min(innerWidth / W, innerHeight / H);
+  cv.style.width = `${W * k}px`; cv.style.height = `${H * k}px`;
+};
+addEventListener('resize', ajustar); ajustar();
+
+// --- precarga: nada se dibuja hasta que TODAS las capas estén ------------
+const rutas = guion.cuadros.flatMap((c) =>
+  ['fondo', 'medio', 'figura'].map((n) => `assets/vitrales/${c.id}/${c.id}_${n}.png`));
+const imgs = new Map();
+await Promise.all(rutas.map((r) => new Promise((ok, mal) => {
+  const im = new Image();
+  im.onload = () => { imgs.set(r, im); ok(); };
+  im.onerror = () => mal(new Error(`no carga ${r}`));
+  im.src = r;
+})));
+
+// --- texto ---------------------------------------------------------------
+function envolver(texto, maxAncho) {
+  const lineas = [];
+  for (const parrafo of texto.split('\n')) {
+    let linea = '';
+    for (const palabra of parrafo.split(' ')) {
+      const prueba = linea ? `${linea} ${palabra}` : palabra;
+      if (ctx.measureText(prueba).width > maxAncho && linea) { lineas.push(linea); linea = palabra; }
+      else linea = prueba;
+    }
+    lineas.push(linea);
+  }
+  return lineas;
+}
+
+function dibujar(t) {
+  const e = estadoEn(t, guion, tweaks);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+  if (!e) return null;
+
+  const zonaTexto = H * 0.26;
+  const alto = H - zonaTexto;
+
+  ctx.save();
+  ctx.globalAlpha = e.opacidad;
+  for (const capa of e.capas) {
+    const im = imgs.get(capa.png);
+    if (!im) continue;
+    // El desplazamiento va en fracción del ancho, así que se multiplica aquí.
+    const dx = capa.dx * W, dy = capa.dy * W;
+    const s = capa.escala;
+    const w = W * s, h = alto * s;
+    ctx.drawImage(im, (W - w) / 2 + dx, (alto - h) / 2 + dy, w, h);
+  }
+
+  // Viñeta: cierra el borde y hace que el vitral se lea como una ventana.
+  const g = ctx.createRadialGradient(W / 2, alto / 2, alto * 0.30, W / 2, alto / 2, alto * 0.95);
+  g.addColorStop(0, 'rgba(0,0,0,0)');
+  g.addColorStop(1, `rgba(0,0,0,${tweaks.vitral.vineta})`);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, alto);
+
+  // Brillo que recorre el vidrio.
+  const a = (e.brillo.angulo * Math.PI) / 180;
+  const avance = (e.brillo.fase * 2 - 0.5) * W * 1.6;
+  const b = ctx.createLinearGradient(avance, 0, avance + Math.cos(a) * W * 0.5, alto);
+  b.addColorStop(0, 'rgba(255,255,255,0)');
+  b.addColorStop(0.5, `rgba(255,255,255,${e.brillo.intensidad * 0.12})`);
+  b.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = b;
+  ctx.fillRect(0, 0, W, alto);
+  ctx.restore();
+
+  // --- texto ---
+  ctx.save();
+  ctx.globalAlpha = e.texto.opacidad;
+  ctx.font = `${Math.round(H * 0.042)}px "Georgia", serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  const lineas = envolver(e.texto.visible, W * 0.82);
+  const altoLinea = H * 0.058;
+  let y = alto + (zonaTexto - lineas.length * altoLinea) / 2;
+  for (const l of lineas) {
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillText(l, W / 2 + 2, y + 2);
+    ctx.fillStyle = e.acento;
+    ctx.fillText(l, W / 2, y);
+    y += altoLinea;
+  }
+  ctx.restore();
+
+  document.getElementById('info').textContent =
+    `${e.indice + 1}/${guion.cuadros.length} · ${e.cuadro} · ${e.fase} · t=${t.toFixed(2)}s`;
+  return e;
+}
+
+// --- reloj ---------------------------------------------------------------
+// `window.__DORIAN__.seek(t)` dibuja el instante EXACTO t. Es lo que permite a
+// Playwright capturar un fotograma reproducible sin depender del reloj real.
+let t0 = performance.now() / 1000;
+let corriendo = true;
+let ultimo = null;
+
+function bucle() {
+  if (corriendo) {
+    const t = performance.now() / 1000 - t0;
+    ultimo = dibujar(t);
+    if (t > duracionTotal(guion, tweaks)) corriendo = false;
+  }
+  requestAnimationFrame(bucle);
+}
+
+addEventListener('keydown', (ev) => {
+  if (ev.code === tweaks.global.tecla_saltar && tweaks.global.permitir_saltar) {
+    const e = estadoEn(performance.now() / 1000 - t0, guion, tweaks);
+    if (e) t0 = performance.now() / 1000 - inicioDe(e.indice + 1, tweaks);
+  }
+  if (ev.code === tweaks.global.tecla_avanzar) { t0 = performance.now() / 1000; corriendo = true; }
+});
+
+window.__DORIAN__ = {
+  seek(t) { corriendo = false; ultimo = dibujar(t); return ultimo; },
+  reanudar() { t0 = performance.now() / 1000; corriendo = true; },
+  duracion: duracionTotal(guion, tweaks),
+  porCuadro: duracionCuadro(tweaks),
+  cuadros: guion.cuadros.length,
+  capas: imgs.size,
+  get estado() { return ultimo; },
+};
+
+bucle();
+</script>

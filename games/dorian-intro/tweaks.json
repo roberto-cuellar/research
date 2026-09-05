@@ -1,24 +1,24 @@
 {
   "_nota": "TODOS los tiempos en SEGUNDOS. Este fichero es el unico sitio donde se toca el ritmo de la cinematica: ni el reproductor ni el guion llevan numeros de tiempo. Cambiar el ritmo NO recompila ni re-hornea nada.",
-
   "global": {
-    "resolucion": [1280, 720],
+    "resolucion": [
+      1280,
+      720
+    ],
     "fps_referencia": 60,
     "permitir_saltar": true,
     "tecla_saltar": "Space",
     "tecla_avanzar": "Enter"
   },
-
   "cuadro": {
     "_": "Ciclo de una slide: entra -> se lee -> sale. La suma manda sobre duracion_total.",
     "fundido_entrada": 1.2,
     "espera_antes_del_texto": 0.4,
-    "lectura": 4.5,
+    "lectura": 5.6,
     "espera_despues_del_texto": 0.8,
     "fundido_salida": 1.0,
-    "_duracion_total": "calculada: 7.9 s por cuadro, 47.4 s los seis"
+    "_duracion_total": "calculada: 9.0 s por cuadro, 54.0 s los seis"
   },
-
   "texto": {
     "_": "Maquina de escribir, como el Minish Cap: el texto aparece letra a letra.",
     "modo": "maquina",
@@ -29,17 +29,18 @@
     "fundido_salida": 0.4,
     "lineas_visibles": 3
   },
-
   "parallax": {
     "_": "Deriva lenta de las capas mientras se lee. amplitud en FRACCION del ancho.",
     "amplitud": 0.035,
     "duracion_deriva": 8.0,
     "easing": "seno",
-    "direccion": [1.0, 0.22],
+    "direccion": [
+      1.0,
+      0.22
+    ],
     "zoom_figura": 1.04,
     "duracion_zoom": 8.0
   },
-
   "vitral": {
     "_": "Brillo que recorre el vidrio, como luz pasando por la ventana.",
     "brillo_intensidad": 0.35,
@@ -48,7 +49,6 @@
     "vineta": 0.55,
     "plomo_grosor": 1.0
   },
-
   "transicion": {
     "tipo": "fundido_a_negro",
     "duracion": 0.9,

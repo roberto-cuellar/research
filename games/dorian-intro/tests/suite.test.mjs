@@ -7,6 +7,8 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { caracteresEscritos, duracionCuadro, estadoEn } from '../src/c_cinematica.js';
+
 const RAIZ = dirname(dirname(fileURLToPath(import.meta.url)));
 const leer = (...p) => JSON.parse(readFileSync(join(RAIZ, ...p), 'utf8'));
 
@@ -58,13 +60,17 @@ describe('tweaks — TODO el ritmo vive aqui, nada en el codigo', () => {
     assert.ok(cps >= 15 && cps <= 60, `${cps} cps queda fuera de lo legible`);
   });
 
-  test('el texto mas largo CABE en el tiempo de lectura', () => {
-    // Si no cupiera, la slide cortaria el texto a media frase.
-    const largo = Math.max(...guion.cuadros.map((c) => c.texto.length));
-    const seg = largo / tweaks.texto.caracteres_por_segundo;
-    assert.ok(seg <= tweaks.cuadro.lectura + tweaks.cuadro.espera_despues_del_texto,
-      `el texto mas largo tarda ${seg.toFixed(1)}s y solo hay `
-      + `${tweaks.cuadro.lectura + tweaks.cuadro.espera_despues_del_texto}s`);
+  test('TODO texto cabe en su ventana de escritura', () => {
+    // Se mide con la funcion REAL, no con caracteres/cps: esa aproximacion
+    // ignora las pausas en punto y coma, y por eso daba por bueno un cuadro
+    // que se cortaba a media frase. 159 caracteres tardan 6.20s, no 4.68s.
+    const ventana = tweaks.cuadro.lectura + tweaks.cuadro.espera_despues_del_texto;
+    for (const c of guion.cuadros) {
+      let t = 0;
+      while (caracteresEscritos(c.texto, t, tweaks) < c.texto.length && t < 30) t += 0.05;
+      assert.ok(t <= ventana,
+        `${c.id}: ${c.texto.length} caracteres tardan ${t.toFixed(2)}s y la ventana es ${ventana}s`);
+    }
   });
 
   test('el parallax es sutil: una deriva, no un barrido', () => {
