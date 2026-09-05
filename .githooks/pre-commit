@@ -1,0 +1,10 @@
+#!/bin/sh
+# CAPA 3, punto 2 — red de seguridad si el hook de pre-escritura se saltó.
+#
+# Invoca EL MISMO verify.mjs que corre en CI. Si este script y el de CI
+# divergieran, el agente aprendería a pasar el local y CI se volvería ruido.
+#
+# Para saltarlo en una emergencia: git commit --no-verify
+# (queda en el reflog; no es un atajo silencioso)
+
+exec node governance/enforce/verify.mjs --staged

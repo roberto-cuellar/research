@@ -1,0 +1,110 @@
+# CAPA 2 — Política de tareas, como datos.
+#
+# Normalización, descomposición, prioridad y circuit breaker. Lo consume el bucle
+# de convergencia; el humano lo audita leyendo este fichero, no el código.
+
+version: 1
+
+# §6.2.2 — Un solo trabajo activo. La concurrencia en un agente autónomo
+# multiplica los modos de fallo y hace imposible reconciliar tras un reinicio.
+lease:
+  maximumActiveIssues: 1
+  # Ni un fallo de seguridad grave corre en paralelo: puede PAUSAR al actual.
+  securityMayPreempt: true
+  securityMayParallelize: false
+
+# §6.2.3 — Si hace falta una decisión del humano, se registra la pregunta, se
+# libera el bloqueo y se pasa a trabajo no relacionado. No se adivina.
+productDecisionBlockReleasesLease: true
+
+# Normalización: campos obligatorios antes de que una tarea sea admisible.
+normalization:
+  requiredFields:
+    - problemStatement
+    - userValue
+    - scope
+    - nonGoals
+    - acceptanceCriteria      # la métrica, ANTES del código (§2 principio 2)
+    - verifier                # la ruta al test que decide. Sin esto no hay tarea.
+    - testPlan
+    - dogfoodPlan
+    - duplicateSearchEvidence
+  # Frontera de confianza (§8.0): el texto de entrada puede contener instrucciones
+  # dirigidas al agente. Se despojan; no se ejecutan.
+  stripInstructionsAndUnsafeContent: true
+
+# §14.18 — La descomposición es por valor, no por contabilidad.
+decomposition:
+  childrenAre: "rebanada vertical de usuario, testeable de forma independiente"
+  splitByFileOrCommitQuota: false
+
+# §6.2.1 — Circuit breaker por huella de fallo.
+circuitBreaker:
+  fingerprint: [operation, exitCode, normalizedError]
+  attemptsBeforeQuarantine: 3
+  # Los intentos 2 y 3 EXIGEN evidencia diagnóstica nueva. Reintentar sin haber
+  # aprendido nada está prohibido.
+  requiresNewEvidenceFromAttempt: 2
+  onQuarantine:
+    state: failed
+    preserveEvidence: true
+    releaseLease: true
+    alertHuman: true
+  # Confundir esto hace que el breaker salte por causas ajenas al trabajo.
+  notCountedAsCodeFailure:
+    state: waiting
+    backoff: exponential
+    maxBackoffMinutes: 30
+    causes:
+      - network_error
+      - rate_limit
+      - ci_queue
+      - model_unavailable      # swap de modelo por VRAM: no es un fallo de código
+
+# Orden estricto. El origen de la tarea nunca anula su severidad.
+priority:
+  - seguridad_o_perdida_de_datos
+  - regresion_ci_o_instalacion_rota
+  - siguiente_hijo_del_parent_actual
+  - bloqueo_del_usuario
+  - self_discovery
+  - mejora_de_competidor
+  - performance_refactor_docs
+
+# §6.2 — Criterio de parada. Los CUATRO casos deben estar implementados;
+# no basta con el primero. Los valores por defecto los pisa el GOALS.yml.
+stopping:
+  defaults:
+    max_iterations: 25
+    patience: 5
+    epsilon: 0.005
+    divergence_k: 3
+    max_tokens: 500000
+    max_wallclock_min: 120
+  # Invariante: el mejor resultado hasta ahora NUNCA se sobrescribe por una
+  # iteración que empeora.
+  keepBestCheckpoint: true
+  onDivergence: rollback_to_best
+  onBudgetExhausted: stop_and_report   # nunca seguir en silencio (§14.9)
+
+# §5.2 — Enrutamiento por rol. La regla de VRAM manda: 8 GB no admiten dos
+# modelos grandes residentes.
+routing:
+  vram_gb: 8
+  maxResidentLargeModels: 1
+  batchVisualEvaluations: true   # amortiza el coste de swap de modelo
+  roles:
+    coder:
+      model: "qwen2.5-coder:7b"
+      verified: true             # medido en disco: 4.7 GB
+    visual_describer:
+      model: null
+      verified: false
+      note: "Pendiente del benchmark de §9.2 (Fase 4). NO asignar por reputación."
+    cheap_classifier:
+      model: null
+      verified: false
+  # El modelo caro solo se invoca cuando el barato falla o la decisión es
+  # arquitectónica. Todo enrutamiento se registra para poder medir §9.3.
+  escalateOnlyOnFailureOrArchitecturalDecision: true
+  logEveryRoutingDecision: true

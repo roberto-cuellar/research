@@ -1,0 +1,32 @@
+# CAPA 2 — Archivos congelados.
+#
+# Este fichero DECLARA. Quien DENIEGA es governance/enforce/verify.mjs junto al
+# hook de pre-escritura. Sin esa capa 3, esto es un cartel que el agente puede
+# ignorar (§8.1).
+#
+# Para congelar un fichero nuevo: sem lock <ruta>. Para descongelarlo hace falta
+# un registro firmado en governance/approvals/. El agente NUNCA se auto-aprueba.
+
+version: 1
+
+frozen:
+  - path: research/PROMPT_MAESTRO.md
+    sha256: "44aa48fa9c375669e66e7ade78017b5e57e5018c4a077f2f90d58f29af29e698"
+    frozen_at: "2026-09-05"
+    reason: "El brief es la fuente de verdad. Se corrige por acuerdo explícito, nunca en una iteración del bucle."
+    unlock_requires: human_approval
+  - path: governance/AUTONOMY.md
+    sha256: "1dad022bdccbdbf7c2335a791d7b4311976680a1393a53e67f4da437686c4c21"
+    frozen_at: "2026-09-05"
+    reason: "Capa 1 de la gobernanza. Si el agente puede reescribir su propio contrato, no hay contrato."
+    unlock_requires: human_approval
+  - path: governance/policy/quality-gates.yml
+    sha256: "d4a4b031d9cc5991bff88f9ae963a45376c3907e337acc69f1cbd40d151323fd"
+    frozen_at: "2026-09-05"
+    reason: "Define el AND booleano del gate. Relajarlo es exactamente el fallo que previene."
+    unlock_requires: human_approval
+  - path: governance/policy/task-policy.yml
+    sha256: "fe0d90b0dddf8d30953eda863832f4f5f5723fd46f53dfd20513b5ec840ecc8e"
+    frozen_at: "2026-09-05"
+    reason: "Circuit breaker y lease único. Sin esto el agente reintenta en bucle."
+    unlock_requires: human_approval

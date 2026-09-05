@@ -1,0 +1,55 @@
+# CAPA 3, punto 3 — autoridad final.
+#
+# Este workflow NO reimplementa el gate: invoca el mismo governance/enforce/verify.mjs
+# que corre en el pre-commit. Si divergieran, el agente aprendería a pasar el local
+# y esto se volvería ruido (§11.4).
+#
+# Patrón tomado de MrHector/borislov-platform/.github/workflows/api-ci.yml.
+
+name: verify
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # El gate compara contra HEAD~ y escanea el historial: sin profundidad
+          # completa, `git diff HEAD` y el escaneo de secretos mienten.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          # Node 22 NO es opcional: los módulos ESM heredados del motor no
+          # declaran "type": "module" y Node 20 no los carga.
+          node-version: 22
+
+      # No hay dependencias todavía (cero deps por diseño). `npm ci` fallaría sin
+      # package-lock.json, así que se omite hasta que exista alguna.
+      - name: Node y versiones
+        run: node -v && npm -v
+
+      - name: Gate de gobernanza + suite
+        run: node governance/enforce/verify.mjs
+
+      # gitleaks con SHA pinneado, no con tag móvil: un tag puede reapuntarse.
+      - name: Escaneo de secretos en todo el historial
+        uses: gitleaks/gitleaks-action@44c470ffc35caa8b1eb3e8012ca53c2f9bea4eb5 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: El ledger no puede estar trackeado
+        run: |
+          if git ls-files --error-unmatch memory/attempts.jsonl 2>/dev/null; then
+            echo "::error::attempts.jsonl está trackeado. El ledger es host-privado (Anexo A.2)."
+            exit 1
+          fi
+          echo "OK: el ledger no está en git"

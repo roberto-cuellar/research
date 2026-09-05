@@ -1,0 +1,81 @@
+# CAPA 2 — El gate de consolidación, como datos.
+#
+# §8.3.2: sin ningún score numérico. Un AND de condiciones, todas obligatorias.
+# Un umbral numérico invita a negociar consigo mismo ("0.87 está casi bien").
+# Un booleano, no.
+#
+# Lo ejecuta governance/enforce/verify.mjs. Este fichero declara QUÉ se exige;
+# el script decide CÓMO se comprueba.
+
+version: 1
+
+gate:
+  # Todas deben ser true. No hay ponderación ni excepciones parciales.
+  required:
+    - lock_integrity        # los sha256 de GOVERNANCE.lock.yml cuadran
+    - no_frozen_writes      # ningún fichero congelado aparece modificado
+    - secrets_clean         # sin secretos en el árbol ni en el diff
+    - ledger_private        # attempts.jsonl NO está trackeado (patrón host-privado)
+    - tests_green           # la suite completa pasa
+    - pass_to_pass          # los tests que ya pasaban siguen pasando
+    - fail_to_pass          # al menos un test que fallaba ahora pasa
+
+  # Las condiciones que no aplican todavía se declaran, pero desactivadas y con
+  # motivo. §14.1: no se finge que un gate existe antes de poder ejecutarlo.
+  pending:
+    - id: typecheck
+      enabled: false
+      reason: "No hay TypeScript en el proyecto todavía"
+    - id: build
+      enabled: false
+      reason: "No hay paso de build; el código es ESM ejecutable directamente"
+    - id: visual_regression
+      enabled: false
+      reason: "Playwright entra en Fase 3"
+    - id: self_review
+      enabled: false
+      reason: "Rol Auditor (§8.5) entra con el bucle de Fase 5"
+      maximumCriticalFindings: 0
+
+# §8.3.1 — El patrón que responde a "cómo escalar sin regresiones".
+# Se registran AMBOS conjuntos en attempts.jsonl por iteración. Sin FAIL_TO_PASS
+# explícito no se puede distinguir "lo arreglé" de "el test siempre pasó".
+regression:
+  pass_to_pass:
+    description: "Tests verdes antes del cambio que deben seguir verdes después"
+    baseline_file: governance/policy/baseline.json
+    on_break: revert        # un cambio que rompe un golden test se revierte.
+                            # NO se "arregla el test" (§14.6).
+  fail_to_pass:
+    description: "Tests que fallaban antes y pasan después"
+    minimum: 1
+    applies_to: [fix, feat]  # un refactor puro puede no tener FAIL_TO_PASS
+
+# Detección de secretos. El patrón viene de ci.yml del repo auditado.
+secrets:
+  reject_paths:
+    - "**/.env"
+    - "**/.env.*"
+    - "**/id_rsa"
+    - "**/id_ed25519"
+    - "**/credentials*"
+    - "**/*secret*"
+    - "**/*token*"
+  allow_paths:
+    # Ficheros cuyo NOMBRE contiene una palabra vetada pero cuyo contenido es doctrina.
+    - "governance/**"
+    - "research/PROMPT_MAESTRO.md"
+    - "tools/lib/store.mjs"
+    - "tools/tests/**"
+
+# Lo que nunca puede quedar trackeado. Es la regla host-privado del Anexo A.2:
+# el CI del repo auditado FALLA el build si el ledger aparece en git.
+never_tracked:
+  - memory/attempts.jsonl
+  - memory/index.json
+  - memory/index.sqlite
+
+dogfood:
+  # §8.4 — verificado como inlineFixesForbidden: true
+  inline_fixes_forbidden: true
+  after_each_consolidation: true
