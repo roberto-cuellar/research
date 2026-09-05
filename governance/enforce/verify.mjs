@@ -20,6 +20,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { sha256Contenido, sha256Fichero } from '../../tools/lib/hash.mjs';
+
 const NUL = String.fromCharCode(0);
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const LOCK = join(RAIZ, 'governance', 'policy', 'GOVERNANCE.lock.yml');
@@ -43,9 +45,9 @@ function git(...a) {
   }
 }
 
-function sha256(ruta) {
-  return createHash('sha256').update(readFileSync(ruta)).digest('hex');
-}
+// Normaliza CRLF antes de hashear: en Windows el checkout reescribe los saltos
+// de línea y el hash de los bytes en disco deja de cuadrar con el del lock.
+const sha256 = sha256Fichero;
 
 /**
  * Parser estricto de la secuencia `frozen:` del lock.
@@ -129,7 +131,7 @@ function sha256Staged(ruta) {
     const buf = execFileSync('git', ['show', `:${ruta}`], {
       cwd: RAIZ, maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'],
     });
-    return createHash('sha256').update(buf).digest('hex');
+    return sha256Contenido(buf);
   } catch {
     return null;   // no está en el índice
   }

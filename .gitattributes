@@ -1,0 +1,17 @@
+# Causa raíz del bug de hashes del 2026-09-05: core.autocrlf reescribía los
+# saltos de línea al hacer checkout en Windows, así que el sha256 de los bytes
+# en disco dejaba de cuadrar con el del lock y el gate acusaba en falso.
+#
+# verify.mjs ya normaliza antes de hashear, pero eliminar la conversión de raíz
+# es mejor que compensarla: así el fichero en disco y el blob de git son iguales
+# byte a byte en las tres plataformas.
+
+* text=auto eol=lf
+
+# Binarios: nunca tocar.
+*.png   binary
+*.jpg   binary
+*.glb   binary
+*.blend binary
+*.pdf   binary
+*.ico   binary

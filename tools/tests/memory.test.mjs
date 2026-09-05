@@ -12,6 +12,7 @@ import { join } from 'node:path';
 import { errorSignature, failureFingerprint, normalizeError, taskSignature } from '../lib/signature.mjs';
 import { ESTADO, LIMITES, redact, truncar } from '../lib/store.mjs';
 import { Memoria } from '../lib/memory.mjs';
+import { esBinario, sha256Contenido } from '../lib/hash.mjs';
 
 let raiz;
 
@@ -283,5 +284,32 @@ describe('§7.6 — recuperación', () => {
     await mem.destilar({ taskSignature: 'a:b', error: 'sola y unica aqui', leccion: 'nunca sirvió' });
     assert.equal((await mem.archivarSinUso({ minHits: 2 })).length, 1);
     assert.equal((await mem.stats()).lecciones_activas, 0);
+  });
+});
+
+// --------------------------------------------------------------------------
+describe('hash — estabilidad entre plataformas', () => {
+  test('CRLF y LF del mismo texto dan el MISMO hash', () => {
+    const lf = Buffer.from('linea uno\nlinea dos\n', 'utf8');
+    const crlf = Buffer.from('linea uno\r\nlinea dos\r\n', 'utf8');
+    assert.notEqual(lf.length, crlf.length, 'los bytes sí difieren');
+    assert.equal(sha256Contenido(lf), sha256Contenido(crlf),
+      'un checkout en Windows no puede cambiar el hash de un fichero intacto');
+  });
+
+  test('textos realmente distintos siguen dando hashes distintos', () => {
+    assert.notEqual(
+      sha256Contenido(Buffer.from('maximumActiveIssues: 1\n')),
+      sha256Contenido(Buffer.from('maximumActiveIssues: 99\n')),
+    );
+  });
+
+  test('el binario se hashea crudo: un CRLF dentro de un binario NO se toca', () => {
+    // 0x0D 0x0A dentro de datos binarios es dato, no un salto de línea.
+    const bin = Buffer.from([0x89, 0x50, 0x00, 0x0d, 0x0a, 0xff]);
+    const distinto = Buffer.from([0x89, 0x50, 0x00, 0x0a, 0xff]);
+    assert.ok(esBinario(bin));
+    assert.notEqual(sha256Contenido(bin), sha256Contenido(distinto),
+      'normalizar un binario lo corrompería y haría colisionar ficheros distintos');
   });
 });

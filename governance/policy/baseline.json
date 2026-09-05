@@ -1,7 +1,7 @@
 {
   "registrado": "2026-09-05",
-  "git_head": "684283b245015ddefc63c8645ef2503494719b33",
-  "pass": 23,
-  "total": 23,
+  "git_head": "e8f58b7b7750c965bb476c81b04a52c337f0fd60",
+  "pass": 26,
+  "total": 26,
   "nota": "Línea base de PASS_TO_PASS (§8.3.1). Solo se actualiza tras una consolidación aprobada."
 }
