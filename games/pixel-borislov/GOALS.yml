@@ -9,16 +9,20 @@ objective: "El personaje se mueve, salta y colisiona con el feel de Pixel Advent
 # Estado: ANDAMIAJE. Los verificadores todavía no existen; las rutas están
 # declaradas para que se escriban primero (§2 principio 2). Ninguna métrica
 # puede marcarse como alcanzada hasta que su verifier exista y se haya ejecutado.
-status: no_iniciado
+status: en_curso
 
 metrics:
   # --- PASS_TO_PASS: la línea base heredada. Es lo que NO se puede romper. ---
   - name: suites_heredadas
     kind: functional
     verifier: games/pixel-borislov/tests/       # node --test "tests/*.test.mjs"
-    target: 171          # sintaxis 47, level 27, director 17, audio 15, player 12,
+    # MEDIDO EN ESTE FORK el 2026-09-05, no heredado del documento.
+    # 171 era el total en MrHector con sus 47 modulos. Aqui hay 29, y
+    # sintaxis.test.mjs escanea los ficheros PRESENTES: cuenta 31, no 47.
+    # El resto de suites da exactamente lo mismo que en el original.
+    target: 155          # sintaxis 31, level 27, director 17, audio 15, player 12,
                          # physics 11, breakables 11, pushable 11, plate 8,
-                         # arquitectura 6, events 6 — medidos en MrHector el 2026-09-04
+                         # arquitectura 6, events 6
     direction: maximize
     note: "Si baja de 171 es regresión, no avance. Se revierte; NO se arregla el test (§14.6)."
 

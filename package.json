@@ -11,8 +11,10 @@
     "sem": "tools/cli/sem.mjs"
   },
   "scripts": {
-    "test": "node --test \"tools/tests/*.test.mjs\"",
-    "verify": "node governance/enforce/verify.mjs"
+    "test": "node --test \"tools/tests/*.test.mjs\" \"games/*/tests/*.test.mjs\"",
+    "verify": "node governance/enforce/verify.mjs",
+    "test:tools": "node --test \"tools/tests/*.test.mjs\"",
+    "test:games": "node --test \"games/*/tests/*.test.mjs\""
   },
   "main": "index.js",
   "repository": {
