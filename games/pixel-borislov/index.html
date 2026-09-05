@@ -1,0 +1,99 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>pixel-borislov</title>
+<style>
+  html,body{margin:0;height:100%;background:#1a1c22;overflow:hidden}
+  canvas{display:block;width:100vw;height:100vh;image-rendering:pixelated}
+  #hud{position:fixed;left:8px;top:8px;font:12px monospace;color:#9fb;
+       background:#0008;padding:6px 8px;border-radius:3px;white-space:pre}
+</style>
+<canvas id="c"></canvas>
+<div id="hud">cargando…</div>
+
+<script type="module">
+// Punto de entrada MÍNIMO y determinista.
+//
+// NO usa game.js: ése arrastra Three.js, audio y coreografía, y para medir la
+// física y el nivel eso es ruido que además rompe el determinismo. Aquí se
+// dibuja el mundo de colisión tal cual lo ve el motor, en 2D.
+//
+// Es exactamente lo que la cascada visual necesita comparar: si esto cambia, es
+// que cambió el NIVEL o la FÍSICA, no una luz ni un post-efecto.
+
+import { nivelDesdeTiles } from './src/w_nivel.js';
+import { CollisionWorld } from './src/p_physics.js';
+
+const COLOR = {
+  hierba: '#5b8c2a', tierra: '#a8674f', madera: '#8a5a2b',
+  metal: '#7c8894', tejado: '#8c4a4a', agua: '#3a6ea8',
+};
+
+const def = await (await fetch('./assets/levels/nivel-01.json')).json();
+const nivel = nivelDesdeTiles(def);
+const mundo = new CollisionWorld(nivel.solids);
+
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+// Tamaño FIJO en píxeles de dibujo: el viewport del navegador no debe alterar
+// la imagen, o la comparación visual dejaría de ser estable.
+cv.width = 960; cv.height = 540;
+const ESCALA = 28, OX = 60, OY = 460;
+const px = (x) => OX + x * ESCALA;
+const py = (y) => OY - y * ESCALA;
+
+const jugador = { x: nivel.spawn.x, y: nivel.spawn.y, w: 0.55, h: 1.48 };
+let vy = 0, pasos = 0;
+
+// Simulación de paso fijo. Sin requestAnimationFrame: el número de pasos no
+// puede depender de la velocidad de la máquina, o dos capturas de la misma
+// escena saldrían distintas.
+const DT = 1 / 60;
+function paso() {
+  vy = Math.max(vy - 36.8 * DT, -24);
+  const r = mundo.move(jugador, { x: 0, y: vy }, DT, 0);
+  if (r.grounded) vy = 0;
+  pasos++;
+  return r;
+}
+
+let ultimo = null;
+for (let i = 0; i < 90; i++) ultimo = paso();   // que caiga y se asiente
+
+function dibujar() {
+  ctx.fillStyle = '#1a1c22';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+
+  for (const s of nivel.solids) {
+    ctx.fillStyle = COLOR[s.surface] ?? '#666';
+    ctx.fillRect(px(s.x), py(s.y + s.h), s.w * ESCALA, s.h * ESCALA);
+    ctx.strokeStyle = '#0006';
+    ctx.strokeRect(px(s.x), py(s.y + s.h), s.w * ESCALA, s.h * ESCALA);
+  }
+
+  for (const m of nivel.markers) {
+    ctx.fillStyle = m.tipo === 'spawn' ? '#4f4' : m.tipo === 'meta' ? '#fd4' : '#4df';
+    ctx.beginPath();
+    ctx.arc(px(m.x), py(m.y), 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = '#e8e8f0';
+  ctx.fillRect(px(jugador.x), py(jugador.y + jugador.h), jugador.w * ESCALA, jugador.h * ESCALA);
+
+  document.getElementById('hud').textContent =
+    `nivel   ${nivel.name}\n`
+    + `solidos ${nivel.solids.length}  (de ${def.terreno.length} tiles)\n`
+    + `jugador x=${jugador.x.toFixed(2)} y=${jugador.y.toFixed(2)}\n`
+    + `apoyado ${ultimo.grounded}  superficie=${ultimo.surface ?? '-'}\n`
+    + `pasos   ${pasos}`;
+}
+dibujar();
+
+// Bandera para Playwright: la captura se toma cuando esto existe, no tras un
+// tiempo de espera. Esperar por reloj es lo que produce capturas flaky.
+window.__SEM_LISTO__ = {
+  solidos: nivel.solids.length, tiles: def.terreno.length,
+  jugador: { x: +jugador.x.toFixed(4), y: +jugador.y.toFixed(4) },
+  apoyado: ultimo.grounded, superficie: ultimo.surface, pasos,
+};
+</script>

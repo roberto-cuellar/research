@@ -12,7 +12,7 @@ updated: 2026-09-05
 > Se regenera con `node tools/dep-graph.mjs`, y **en el mismo commit** que cualquier módulo nuevo o
 > movido. Un grafo que va una spec por detrás es peor que no tenerlo, porque se le cree.
 
-29 módulos · 12.846 líneas · 3 sin clasificar
+30 módulos · 12.975 líneas · 3 sin clasificar
 
 ## Cómo se usa
 
@@ -56,7 +56,8 @@ dejan de compilar si cambia de nombre o desaparece.
 | `s_dialogue.js` | sonido | 302 | — | — | `game.js` |
 | `s_sfx.js` | sonido | 163 | — | — | `game.js` |
 | `w_level.js` | datos del mundo | 1060 | `w_contracts.js` | — | `game.js` |
-| `w_contracts.js` | datos del mundo | 59 | — | — | `i_input.js` `p_breakables.js` `p_physics.js` `p_player.js` `p_pushable.js` `w_level.js` |
+| `w_nivel.js` | datos del mundo | 129 | `w_contracts.js` | — | — |
+| `w_contracts.js` | datos del mundo | 59 | — | — | `i_input.js` `p_breakables.js` `p_physics.js` `p_player.js` `p_pushable.js` `w_level.js` `w_nivel.js` |
 
 ## Violaciones de capa
 
@@ -70,4 +71,4 @@ dejan de compilar si cambia de nombre o desaparece.
 
 Nadie los importa. Son los más baratos de mover, y el sitio por donde empezar una migración:
 
-`game.js`
+`game.js` · `w_nivel.js`

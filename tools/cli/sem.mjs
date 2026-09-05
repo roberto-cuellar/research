@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { Memoria } from '../lib/memory.mjs';
 import { Bucle, RAZON } from '../lib/bucle.mjs';
 import { RegistroVisual } from '../lib/capturas.mjs';
+import { ejecutorPara } from '../lib/ejecutores.mjs';
 import { readJsonl } from '../lib/store.mjs';
 import { errorSignature, taskSignature } from '../lib/signature.mjs';
 
@@ -235,13 +236,59 @@ ${C.b}Memoria${C.r} ${C.dim}(consultada ANTES de actuar, §7.4)${C.r}`);
   if (!lecciones.length) out(`${C.dim}  sin lecciones previas para esta tarea${C.r}`);
   else lecciones.forEach((l) => out(`  · [${l.hits} golpes] ${l.lesson.slice(0, 100)}`));
 
+  const ejecutor = ejecutorPara({ raiz: RAIZ, proyecto, metrica: objetivo });
+  if (!ejecutor) {
+    err(`
+${C.x}sin ejecutor para la métrica "${objetivo.name}"${C.r}`);
+    err(`${C.dim}  verifier: ${objetivo.verifier}. Añade uno en tools/lib/ejecutores.mjs.`);
+    err('  §14.1: no se inventa un ejecutor que devuelva cualquier cosa.' + C.r);
+    process.exit(2);
+  }
+
+  if (args.includes('--dry-run')) {
+    out(`
+${C.dim}--dry-run: ejecutor listo, no se itera.${C.r}`);
+    return;
+  }
+
+  const maxIter = Number(args.includes('--max') ? args[args.indexOf('--max') + 1] : objetivo.max_iterations);
   out(`
-${C.a}El ejecutor de acciones aún no está conectado.${C.r}`);
-  out(`${C.dim}  El motor del bucle está completo y probado (criterios de parada,`);
-  out(`  breaker y registro visual). Lo que falta es quién ACTÚA en el paso [4]:`);
-  out(`  el puente nivel->motor y el punto de entrada del juego.`);
-  out(`  §14.1: no se afirma que algo funciona sin haberlo ejecutado.${C.r}`);
-  process.exit(3);
+${C.b}Iterando${C.r} ${C.dim}(tope ${maxIter})${C.r}
+`);
+
+  let veredicto = null;
+  for (let i = 0; i < maxIter; i++) {
+    const r = await bucle.iterar(ejecutor, {
+      dominio: proyecto.split('/')[0], sujeto: objetivo.name,
+    });
+
+    const val = r.attempt?.metrics?.[objetivo.name];
+    const marca = r.attempt?.result === 'pass' ? `${C.v}·${C.r}` : `${C.x}x${C.r}`;
+    out(`  ${marca} iter ${String(bucle.iteracion).padStart(2)}  ${objetivo.name}=${val ?? '—'}`
+      + `  ${C.dim}${r.detalle ?? ''}${C.r}`);
+
+    if (r.esperando) {
+      out(`    ${C.a}esperando ${Math.round(r.breaker.backoff_ms / 1000)}s (causa ajena, no cuenta como fallo)${C.r}`);
+      await new Promise((s) => setTimeout(s, Math.min(r.breaker.backoff_ms, 5000)));
+      continue;
+    }
+    if (r.parar) { veredicto = r; break; }
+  }
+
+  out();
+  const res = await bucle.resumen();
+  if (!veredicto) {
+    out(`${C.a}tope de iteraciones sin veredicto${C.r}`);
+  } else {
+    const bueno = veredicto.razon === RAZON.OBJETIVO;
+    out(`${bueno ? C.v : C.a}PARADA: ${veredicto.razon}${C.r}`);
+    out(`  ${veredicto.detalle}`);
+    if (veredicto.rollback) out(`  ${C.a}rollback a la iteración ${veredicto.rollback.iteracion}${C.r}`);
+  }
+  out(`
+${C.b}Mejor resultado${C.r}  ${res.campeon ? `${res.campeon.valor} en la iteración ${res.campeon.iteracion}` : '—'}`);
+  out(`${C.dim}capturas: ${res.visual.registradas} registradas, ${res.visual.imagenes_unicas} únicas${C.r}`);
+  process.exit(veredicto?.razon === RAZON.OBJETIVO ? 0 : 1);
 }
 
 async function cmdCapturas(args) {

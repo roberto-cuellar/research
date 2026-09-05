@@ -30,7 +30,17 @@ export default defineConfig({
     },
   },
 
+  // Un servidor estatico: el juego carga su nivel con fetch(), y fetch sobre
+  // file:// lo bloquea el navegador por CORS. Reusa el servidor si ya corre.
+  webServer: {
+    command: 'npx --yes http-server . -p 4173 -s',
+    url: 'http://127.0.0.1:4173/games/pixel-borislov/index.html',
+    reuseExistingServer: true,
+    timeout: 60_000,
+  },
+
   use: {
+    baseURL: 'http://127.0.0.1:4173',
     ...devices['Desktop Chrome'],
     ...(enCI ? {} : { channel: 'chrome' }),
     // Determinismo: sin él los niveles 1-3 de la cascada dan falsos positivos.

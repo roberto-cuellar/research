@@ -20,6 +20,8 @@ metrics:
     # 171 era el total en MrHector con sus 47 modulos. Aqui hay 29, y
     # sintaxis.test.mjs escanea los ficheros PRESENTES: cuenta 31, no 47.
     # El resto de suites da exactamente lo mismo que en el original.
+    # 155 es el SUELO heredado, no la meta: es una metrica guardia. Con las 16
+    # pruebas del puente nivel->motor la suite va por 171.
     target: 155          # sintaxis 31, level 27, director 17, audio 15, player 12,
                          # physics 11, breakables 11, pushable 11, plate 8,
                          # arquitectura 6, events 6
@@ -37,8 +39,10 @@ metrics:
   # --- Visual ---
   - name: similitud_visual
     kind: visual
-    verifier: tools/metrics/visual.py
-    reference: games/pixel-borislov/tests/visual/baselines/
+    # El verificador es el spec de Playwright, que compara contra el golden
+    # versionado. visual.py es la cascada que USA ese spec, no el gate.
+    verifier: tests/visual/juego.spec.mjs
+    reference: tests/visual/juego.spec.mjs-snapshots/nivel-01-juego-win32.png
     metric: SSIM
     # 0.98 y NO el 0.95 de la plantilla de §6.3. Medido el 2026-09-05: con 0.95
     # un objeto tiene que desplazarse 80 px (20% del ancho) para que SSIM falle.
