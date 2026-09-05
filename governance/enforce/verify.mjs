@@ -21,6 +21,11 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { sha256Contenido, sha256Fichero } from '../../tools/lib/hash.mjs';
+import { parseYaml } from '../../tools/lib/yaml.mjs';
+import {
+  validarClaims, validarGoals, validarLock, validarQualityGates,
+  validarRequirements, validarResearchContract, validarTaskPolicy,
+} from '../../tools/lib/esquemas.mjs';
 
 const NUL = String.fromCharCode(0);
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -287,6 +292,110 @@ function checkFailToPass() {
       };
 }
 
+
+// --- contratos de track ------------------------------------------------------
+// research-contract.yml y quality-gates.yml DECLARABAN sin denegar. Estos dos
+// checks los hacen ejecutables: sin ellos la gobernanza de los tracks era el
+// mismo cartel que §8 advierte.
+
+function ficherosBajo(prefijo) {
+  return git('ls-files', prefijo).split('\n').map((s) => s.trim()).filter(Boolean);
+}
+
+function leerYamlSeguro(rel) {
+  try { return { datos: parseYaml(readFileSync(join(RAIZ, rel), 'utf8')), error: null }; }
+  catch (e) { return { datos: null, error: `${rel}: ${e.message}` }; }
+}
+
+/** Valida los ficheros de política. Un typo aquí deja el gate sin condiciones. */
+function checkPolicySchemas() {
+  const fallos = [];
+  const pares = [
+    ['governance/policy/GOVERNANCE.lock.yml', (d) => validarLock(d, RAIZ)],
+    ['governance/policy/quality-gates.yml', validarQualityGates],
+    ['governance/policy/task-policy.yml', validarTaskPolicy],
+    ['governance/policy/research-contract.yml', validarResearchContract],
+  ];
+  for (const [rel, validar] of pares) {
+    if (!existsSync(join(RAIZ, rel))) { fallos.push(`${rel}: NO EXISTE`); continue; }
+    const { datos, error } = leerYamlSeguro(rel);
+    if (error) { fallos.push(error); continue; }
+    for (const m of validar(datos)) fallos.push(`${rel}: ${m}`);
+  }
+  return fallos.length
+    ? { id: 'policy_schemas', ok: false, detail: fallos.join('\n      ') }
+    : { id: 'policy_schemas', ok: true, detail: `${pares.length} ficheros de política válidos` };
+}
+
+/** §10.1 ejecutable: sin esto, el contrato de reproducibilidad era prosa. */
+function checkResearchContract() {
+  const fallos = [];
+  const goals = ficherosBajo('research').filter((f) => f.endsWith('GOALS.yml'));
+
+  for (const rel of goals) {
+    const { datos, error } = leerYamlSeguro(rel);
+    if (error) { fallos.push(error); continue; }
+    for (const m of validarGoals(datos, rel, RAIZ)) fallos.push(`${rel}: ${m}`);
+
+    const dir = rel.slice(0, rel.lastIndexOf('/'));
+    const claims = join(RAIZ, dir, 'CLAIMS.md');
+    if (!existsSync(claims)) {
+      fallos.push(`${dir}: falta CLAIMS.md (§10.1 condición 1)`);
+    } else {
+      for (const m of validarClaims(readFileSync(claims, 'utf8'))) fallos.push(`${dir}/CLAIMS.md: ${m}`);
+    }
+
+    const req = join(RAIZ, dir, 'requirements.txt');
+    if (existsSync(req)) {
+      for (const m of validarRequirements(readFileSync(req, 'utf8'))) fallos.push(`${dir}/requirements.txt: ${m}`);
+    }
+
+    const met = join(RAIZ, dir, 'results', 'metrics.json');
+    if (existsSync(met)) {
+      try { JSON.parse(readFileSync(met, 'utf8')); }
+      catch (e) { fallos.push(`${dir}/results/metrics.json: no parseable — ${e.message}`); }
+    }
+  }
+  return fallos.length
+    ? { id: 'research_contract', ok: false, detail: fallos.join('\n      ') }
+    : { id: 'research_contract', ok: true, detail: `${goals.length} proyecto(s) de investigación conformes` };
+}
+
+// §14.11c — los módulos del laberinto NO se reutilizan para el clon plataformer.
+const MODULOS_PROHIBIDOS = [
+  'g_maze.js', 'r_maze.js', 'w_maze.js', 'w_maze_retos.js', 'hu_maze.js',
+  'hu_vallas.js', 'p_maze_mover.js', 'p_maze_reto.js', 'p_maze_rival.js',
+  'r_fondo.js', 'r_niebla.js', 'r_aura.js', 'r_cine.js',
+  'p_cadena.js', 'r_procanim.js',
+];
+
+function checkGameContract() {
+  const fallos = [];
+  const goals = ficherosBajo('games').filter((f) => f.endsWith('GOALS.yml'));
+
+  for (const rel of goals) {
+    const { datos, error } = leerYamlSeguro(rel);
+    if (error) { fallos.push(error); continue; }
+    for (const m of validarGoals(datos, rel, RAIZ)) fallos.push(`${rel}: ${m}`);
+  }
+
+  for (const f of ficherosBajo('games')) {
+    const base = f.split('/').pop();
+    if (f.includes('/src/') && MODULOS_PROHIBIDOS.includes(base)) {
+      fallos.push(`${f}: módulo del laberinto en el clon plataformer (§14.11c)`);
+    }
+  }
+
+  // §14.11: MrHector es solo lectura. Ninguna ruta trackeada puede apuntar ahí.
+  for (const f of git('ls-files').split('\n')) {
+    if (/MrHector/i.test(f)) fallos.push(`${f}: ruta a MrHector trackeada (§14.11: es solo lectura)`);
+  }
+
+  return fallos.length
+    ? { id: 'game_contract', ok: false, detail: fallos.join('\n      ') }
+    : { id: 'game_contract', ok: true, detail: `${goals.length} proyecto(s) de juego conformes` };
+}
+
 const CHECKS = {
   lock_integrity: checkLockIntegrity,
   no_frozen_writes: checkNoFrozenWrites,
@@ -295,6 +404,9 @@ const CHECKS = {
   tests_green: checkTestsGreen,
   pass_to_pass: checkPassToPass,
   fail_to_pass: checkFailToPass,
+  policy_schemas: checkPolicySchemas,
+  research_contract: checkResearchContract,
+  game_contract: checkGameContract,
 };
 
 // --- modo baseline ----------------------------------------------------------
@@ -333,12 +445,34 @@ if (existsSync(GATES)) {
 const CONSOLIDACION = args.includes('--consolidation');
 if (!CONSOLIDACION) requeridos = requeridos.filter((id) => id !== 'fail_to_pass');
 
-const aEjecutar = requeridos.filter((id) => (ONLY ? ONLY.includes(id) : true) && CHECKS[id]);
+// --only es un filtro de DEPURACION: selecciona sobre los checks implementados,
+// no sobre `required`. Intersecarlo con `required` impedia probar un check nuevo
+// antes de declararlo obligatorio, que es justo cuando hace falta probarlo.
+// El gate real (sin --only) sigue usando `required`, que es la autoridad.
+const aEjecutar = ONLY
+  ? ONLY.filter((id) => CHECKS[id])
+  : requeridos.filter((id) => CHECKS[id]);
+
+if (ONLY) {
+  const desconocidos = ONLY.filter((id) => !CHECKS[id]);
+  if (desconocidos.length) {
+    console.error(`--only nombra checks que no existen: ${desconocidos.join(', ')}`);
+    process.exit(2);
+  }
+}
 const resultados = aEjecutar.map((id) => {
   try { return CHECKS[id](); } catch (e) { return { id, ok: false, detail: `el check reventó: ${e.message}` }; }
 });
 
-const todoOk = resultados.every((r) => r.ok);
+// `[].every()` devuelve true: un AND sobre el conjunto vacío aprueba todo. Es
+// exactamente el fallo contra el que avisa validarQualityGates, y lo tenía el
+// propio gate. Un --only con un id inexistente, o un `required` vacío, daba
+// VERDE sin haber comprobado nada.
+const todoOk = resultados.length > 0 && resultados.every((r) => r.ok);
+if (resultados.length === 0) {
+  console.error(`${C.x}✗ el gate no ejecutó NINGUNA comprobación${C.r} — `
+    + 'un AND vacío no es una aprobación. Revisa gate.required o el filtro --only.');
+}
 
 if (JSON_OUT) {
   console.log(JSON.stringify({ ok: todoOk, modo: SOLO_STAGED ? 'staged' : 'full', checks: resultados }, null, 2));
