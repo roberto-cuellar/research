@@ -12,7 +12,7 @@ updated: 2026-09-05
 > Se regenera con `node tools/dep-graph.mjs`, y **en el mismo commit** que cualquier módulo nuevo o
 > movido. Un grafo que va una spec por detrás es peor que no tenerlo, porque se le cree.
 
-30 módulos · 12.975 líneas · 3 sin clasificar
+31 módulos · 13.058 líneas · 3 sin clasificar
 
 ## Cómo se usa
 
@@ -39,6 +39,7 @@ dejan de compilar si cambia de nombre o desaparece.
 | `p_projectile.js` | playsim | 143 | `p_events.js` | — | `game.js` |
 | `p_breakables.js` | playsim | 131 | `p_events.js` `w_contracts.js` | — | `game.js` |
 | `p_events.js` | playsim | 130 | — | — | `game.js` `p_breakables.js` `p_plate.js` `p_projectile.js` |
+| `p_trampolin.js` | playsim | 83 | — | — | — |
 | `p_plate.js` | playsim | 71 | `p_events.js` | — | `game.js` |
 | `r_particles.js` | render | 719 | `p_physics.js` | `three` | `game.js` |
 | `r_equip.js` | render | 664 | `GLTFLoader.js` | `three` | `game.js` |
@@ -71,4 +72,4 @@ dejan de compilar si cambia de nombre o desaparece.
 
 Nadie los importa. Son los más baratos de mover, y el sitio por donde empezar una migración:
 
-`game.js` · `w_nivel.js`
+`game.js` · `p_trampolin.js` · `w_nivel.js`

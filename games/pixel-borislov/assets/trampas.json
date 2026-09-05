@@ -1,0 +1,19 @@
+{
+  "_nota": "Inventario CANONICO de trampas. Sacado del pack CC0, no de la web: la pagina de itch.io solo enumera cuatro. Los ESTADOS de animacion definen el comportamiento, asi que valen como especificacion. El id es lo que el ejecutor busca en tests/traps/<id>.test.mjs",
+  "_fuente": "Pixel Adventure 1 / Assets / Traps",
+  "trampas": [
+    { "id": "rock-head",         "nombre": "Rock Head",         "estados": ["Blink","Idle","Top Hit","Bottom Hit","Left Hit","Right Hit"], "mecanica": "bloque que embiste en 4 direcciones; parpadea antes de moverse (telegrafia)" },
+    { "id": "spike-head",        "nombre": "Spike Head",        "estados": ["Blink","Idle","Top Hit","Bottom Hit","Left Hit","Right Hit"], "mecanica": "igual que Rock Head pero daña al contacto" },
+    { "id": "saw",               "nombre": "Saw",               "estados": ["On","Off","Chain"], "mecanica": "sierra que recorre una cadena o rail" },
+    { "id": "spiked-ball",       "nombre": "Spiked Ball",       "estados": ["Spiked Ball","Chain"], "mecanica": "pendulo colgado de cadena" },
+    { "id": "fire",              "nombre": "Fire",              "estados": ["On","Off","Hit"], "mecanica": "peligro ciclico encendido/apagado" },
+    { "id": "spikes",            "nombre": "Spikes",            "estados": ["Idle"], "mecanica": "peligro estatico" },
+    { "id": "arrow",             "nombre": "Arrow",             "estados": ["Idle","Hit"], "mecanica": "proyectil o disparador" },
+    { "id": "trampolin",         "nombre": "Trampoline",        "estados": ["Idle","Jump"], "mecanica": "impulso vertical al pisarlo desde arriba" },
+    { "id": "falling-platforms", "nombre": "Falling Platforms", "estados": ["On","Off"], "mecanica": "se activa al pisar y cae tras un retardo" },
+    { "id": "platforms",         "nombre": "Platforms",         "estados": ["Brown On","Brown Off","Grey On","Grey Off","Chain"], "mecanica": "plataformas moviles sobre cadena, dos variantes" },
+    { "id": "fan",               "nombre": "Fan",               "estados": ["On","Off"], "mecanica": "corriente ascendente" },
+    { "id": "blocks",            "nombre": "Blocks",            "estados": ["Idle","HitTop","HitSide","Part 1","Part 2"], "mecanica": "bloque rompible en dos pedazos; mapea sobre p_breakables.js" },
+    { "id": "sand-mud-ice",      "nombre": "Sand Mud Ice",      "estados": ["Sand Particle","Mud Particle","Ice Particle","Sliced"], "mecanica": "tres tipos de friccion de superficie; mapea sobre SURFACE de w_contracts.js" }
+  ]
+}

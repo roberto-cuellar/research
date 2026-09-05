@@ -9,7 +9,7 @@
 // devolviera true/false le quitaría al bucle su criterio de convergencia.
 
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** Extrae el resumen de `node --test`. -1 si no se pudo leer: no se inventa. */
@@ -101,11 +101,64 @@ export function ejecutorVisual({ raiz, proyecto, spec, capturaEsperada }) {
   };
 }
 
+
+/**
+ * Métrica de progreso real: cuántas trampas tienen su test EN VERDE.
+ *
+ * A diferencia de las métricas guardia —"no bajes de 155", "no rompas el
+ * golden"—, ésta empieza en 0 y solo sube escribiendo código nuevo. Es la que
+ * hace trabajar al bucle de verdad.
+ *
+ * Cuenta trampas, NO ficheros ni tests: una trampa con su fichero creado pero
+ * sin tests dentro cuenta 0, y una con tests en rojo también. Contar ficheros
+ * permitiría subir la métrica creando ficheros vacíos.
+ */
+export function ejecutorTrampas({ raiz, proyecto, inventario = 'assets/trampas.json' }) {
+  const cwd = join(raiz, proyecto);
+  return async () => {
+    const rutaInv = join(cwd, inventario);
+    if (!existsSync(rutaInv)) {
+      return { valor: null, error: `sin inventario de trampas: ${inventario}`, operacion: 'trampas' };
+    }
+    const { trampas } = JSON.parse(readFileSync(rutaInv, 'utf8'));
+
+    const hechas = [];
+    const rojas = [];
+    const sinTest = [];
+
+    for (const tr of trampas) {
+      const spec = join(cwd, 'tests', 'traps', `${tr.id}.test.mjs`);
+      if (!existsSync(spec)) { sinTest.push(tr.id); continue; }
+
+      const { salida, codigo } = correr('node', ['--test', spec], cwd, 120_000);
+      const c = contarTests(salida);
+      // Un fichero sin ningún test dentro NO cuenta: si no, bastaría con crear
+      // el fichero para subir la métrica.
+      if (codigo === 0 && c.fail === 0 && c.pass > 0) hechas.push(tr.id);
+      else rojas.push(tr.id);
+    }
+
+    return {
+      valor: hechas.length,
+      metricas: {
+        declaradas: trampas.length,
+        sin_test: sinTest.length,
+        en_rojo: rojas.length,
+      },
+      resumen: `${hechas.length}/${trampas.length} trampas con test verde`
+             + (rojas.length ? ` · ${rojas.length} en rojo: ${rojas.join(', ')}` : ''),
+      evidencia: hechas.map((id) => `tests/traps/${id}.test.mjs`),
+      accion: { type: 'run', target: 'tests/traps', summary: 'inventario de trampas' },
+    };
+  };
+}
+
 /**
  * Elige el ejecutor por la forma de la métrica.
  * Si no hay ninguno, se dice — no se inventa uno que devuelva cualquier cosa.
  */
 export function ejecutorPara({ raiz, proyecto, metrica }) {
+  if (/\/traps\/?$/.test(metrica.verifier)) return ejecutorTrampas({ raiz, proyecto });
   if (metrica.kind === 'visual' || /\.spec\.(mjs|ts|js)$/.test(metrica.verifier)) {
     return ejecutorVisual({
       raiz, proyecto,
