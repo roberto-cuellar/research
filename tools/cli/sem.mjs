@@ -51,7 +51,11 @@ async function cmdStatus() {
     corruptos: s.attempts_corruptos,
     'lecciones activas': s.lecciones_activas,
     archivadas: s.lecciones_archivadas,
-    'firmas indexadas': s.indice.firmas_error,
+    // Son dos índices distintos: uno mapea firmas de INTENTO a su offset, el
+    // otro las lecciones. Mostrarlos con la misma etiqueta hacía parecer que
+    // una lección recuperable estaba sin indexar.
+    'firmas de intento': s.indice.firmas_error,
+    'lecciones indexadas': s.indice.lecciones,
   }]);
 
   const proyectos = await listarProyectos();
