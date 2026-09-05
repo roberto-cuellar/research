@@ -1,0 +1,61 @@
+project: research/optica-computacional/holografia-planos-inclinados
+objective: "Reproducir el metodo de 4 pasos de hologramas en planos inclinados y verificar sus afirmaciones"
+
+paper:
+  titulo: "Iterative technique for generating numerical on-axis holograms of an object on tilted planes using Rayleigh-Sommerfeld approximation"
+  autores: ["Roberto A Cuellar-Lozano", "Jorge Enrique Rueda"]
+  publicacion: "BISTUA Rev. FCB, Vol. 19 (2), 2021, pp. 15-20"
+  claims: CLAIMS.md
+
+status: bloqueado
+bloqueo:
+  # §6.2.3: se registra la pregunta, se libera el bloqueo, no se adivina.
+  pregunta: "Cual es el valor de M (dimension del arreglo)? El texto no lo declara y
+             despejando la Ec.9 con dz=13.7um sale M=170, que no es potencia de 2."
+  a_quien: usuario   # es el autor del paper
+  bloquea: [C1, C3, C4, C6]
+  razon: "M fija el tamano de todos los arreglos. Sin el no se puede replicar ninguna figura."
+
+metrics:
+  - name: claims_replicados
+    kind: functional
+    verifier: notebooks/01_reproduccion.ipynb
+    target: 4          # C1, C2, C3, C6. C4 depende de C1; C5 no es verificable aqui.
+    direction: maximize
+
+  - name: dz_calculado
+    kind: numeric
+    verifier: src/geometria.py
+    afirmado: 13.7e-6  # metros, con dx=19um D=128 Omega=28.5deg
+    tolerancia_rel: 0.01
+    direction: minimize
+    note: "Comprobacion mas barata del paper. Con M=D=128 da 10.32um, no 13.7um.
+           Resolver M antes de declarar nada."
+
+  - name: notebook_corre_en_colab
+    kind: functional
+    verifier: nbmake
+    target: 1
+    direction: maximize
+    note: "Sin rutas de Windows, semillas en la primera celda, requirements anclados."
+
+stopping:
+  max_iterations: 25
+  patience: 5
+  epsilon: 0.005
+  divergence_k: 3
+  max_wallclock_min: 240
+
+# §10.3.1 — Calibracion con el caso de referencia verificado.
+presupuesto:
+  fase_reproduccion_horas: 12
+  fase_mejora_horas: 0      # NO se abre hasta que la reproduccion cierre
+  nota: "El caso de referencia fue 37h de reproduccion + 88h de mejora para +2.71 puntos.
+         Una mejora grande y rapida es SOSPECHOSA hasta demostrar lo contrario."
+
+# Este paper es ideal para el track: numpy + FFT, determinista, sin GPU obligatoria,
+# y cabe de sobra en una T4 gratuita de Colab.
+viabilidad:
+  gpu_necesaria: false
+  dependencias: [numpy, scipy, matplotlib, pillow]
+  colab: true

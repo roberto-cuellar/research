@@ -93,3 +93,76 @@ curl -s http://localhost:11434/api/generate \
 ollama ps
 ollama stop qwen3-vl:4b-instruct
 ```
+
+---
+
+# 6. Precisión de detección — primera medición (2026-09-05)
+
+Caso de prueba: escena sintética determinista de 400×300 (suelo, caja, sol) con
+**una caja desplazada 20 px a la derecha**. Es literalmente uno de los casos
+difíciles que §9.2 prescribe. Fixtures en `tools/metrics/fixtures/`.
+
+## 6.1 Los cuatro VLM fallan el caso de 20 px
+
+| Modelo | Latencia | Respuesta |
+|---|---|---|
+| `qwen3-vl:4b-instruct` | 2.5 s | `SIN DIFERENCIAS VISIBLES` ❌ |
+| `qwen3-vl:8b-instruct` | 11.5 s | `SIN DIFERENCIAS VISIBLES` ❌ |
+| `minicpm-v4.5:8b` | 7.2 s | `SIN DIFERENCIAS VISIBLES` ❌ |
+| `gemma4:12b` | 71.9 s | `SIN DIFERENCIAS VISIBLES` ❌ |
+
+**Control ejecutado antes de concluir.** Cabía la duda de que Ollama no pasara
+las dos imágenes al modelo. Se repitió con una captura radicalmente distinta
+(fondo rojo, círculo blanco con texto) y **ambos `qwen3-vl` describieron las dos
+imágenes con precisión**, enumerando los elementos de cada una. El transporte
+multi-imagen funciona: **el fallo con 20 px es del modelo, no del cableado.**
+
+> Sin este control, la conclusión habría sido una acusación infundada al modelo.
+> Es exactamente el principio 1 de §2 aplicado a la propia medición.
+
+## 6.2 SSIM tampoco lo caza con el umbral por defecto
+
+Barrido sobre la misma escena, variando solo el desplazamiento:
+
+| Desplazamiento | SSIM | MSE | ¿pasa @0.95? | @0.98 | @0.99 |
+|---|---|---|---|---|---|
+| 1 px | 0.9953 | 21 | sí | sí | sí |
+| 2 px | 0.9919 | 42 | sí | sí | sí |
+| 5 px | 0.9855 | 106 | sí | sí | **NO** |
+| 10 px | 0.9805 | 212 | sí | sí | **NO** |
+| 20 px | 0.9719 | 424 | sí | **NO** | **NO** |
+| 40 px | 0.9547 | 848 | sí | **NO** | **NO** |
+| 80 px | 0.9364 | 1294 | **NO** | **NO** | **NO** |
+
+🔑 **Con el umbral 0.95 de la plantilla de §6.3, un objeto tiene que moverse
+80 px —el 20% del ancho de la imagen— antes de que SSIM lo rechace.** Ese valor
+por defecto es demasiado permisivo para validación de escenas.
+
+**Recomendación con su número:** para escenas de este tipo, `target: 0.98` caza
+desplazamientos ≥20 px y `0.99` los caza desde 5 px. El valor concreto depende
+del contenido, así que **cada `GOALS.yml` debe calibrar el suyo con un barrido
+como este**, no heredar 0.95.
+
+## 6.3 La conclusión incómoda
+
+Para el caso de 20 px **fallaron a la vez la métrica barata y el describidor
+caro**. Eso no invalida el patrón "el VLM describe, la métrica decide" — lo
+refuerza: si el VLM hubiera sido el gate, habría dado un falso VERDE con toda
+naturalidad, y no habría forma de calibrarlo.
+
+Lo que sí invalida es la idea de que SSIM sola baste. Es el argumento de §8.2
+—*"ninguna métrica aislada captura la percepción humana"*— pero ahora con un
+número propio en esta máquina. **Refuerza la prioridad de medir LPIPS**, que es
+la métrica primaria recomendada para renders y la que mejor correlaciona con la
+percepción.
+
+## 6.4 `NO VERIFICADO` que añade esta medición
+
+- 🔴 **LPIPS sobre este mismo barrido.** Es la comprobación que decidiría si
+  LPIPS aporta lo que SSIM no da. Sin medir.
+- ⚠️ **La escena de prueba es sintética.** Un render de Blender y una captura de
+  UI del juego tienen estadísticas distintas. El dataset real de 20–30 pares
+  sigue siendo necesario; esto es un caso, no un benchmark.
+- ⚠️ **Un solo prompt probado.** No se descarta que otro prompt (por ejemplo,
+  pidiendo coordenadas explícitas en vez de descripción libre) mejore la
+  detección de `qwen3-vl`, que es SOTA en *UI grounding*.
