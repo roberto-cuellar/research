@@ -1,0 +1,25 @@
+# CODEOWNERS — capa 2 de la protección de ficheros (Anexo A.2).
+#
+# El patrón de tres capas asigna las rutas críticas a un humano. Hoy el equipo
+# es una persona, así que todo apunta a @roberto-cuellar; el valor no está en
+# repartir, sino en que GitHub EXIJA su revisión sobre estas rutas cuando la
+# protección de rama lo requiera.
+#
+# Esto NO sustituye a governance/policy/GOVERNANCE.lock.yml: el lock actúa en
+# cada escritura y en cada commit; CODEOWNERS actúa solo en pull requests.
+# Son capas distintas del mismo principio.
+
+# Por defecto
+*                                   @roberto-cuellar
+
+# --- lo que nunca debe cambiar sin mirarlo dos veces ------------------------
+/governance/                        @roberto-cuellar
+/.github/                           @roberto-cuellar
+/research/PROMPT_MAESTRO.md         @roberto-cuellar
+
+# Las métricas objetivo: cambiarlas es mover la portería a mitad del partido.
+**/GOALS.yml                        @roberto-cuellar
+
+# El destilado de la memoria entra al contexto de cada iteración: una lección
+# mal escrita envenena todas las decisiones siguientes (§7.6).
+/memory/lessons.jsonl               @roberto-cuellar

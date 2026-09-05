@@ -45,10 +45,26 @@ jobs:
       #   GET /repos/gitleaks/gitleaks-action/tags -> v2.3.9 = ff98106e...
       # gitleaks-action v2 solo exige GITLEAKS_LICENSE en repos de organización;
       # este es personal, así que no hace falta.
-      - name: Escaneo de secretos en todo el historial
+      #
+      # ⚠️ ALCANCE REAL, leído del log: la acción ejecuta `git log -p -U0 -1`,
+      # así que escanea SOLO los commits del push. En un push de un commit, eso
+      # es 3.8 KB. El paso se llamaba "todo el historial" y era falso.
+      - name: Escaneo de secretos del push
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # El escaneo que SÍ recorre todo el historial. Hace falta aparte porque un
+      # secreto commiteado y luego borrado sigue en los objetos de git: el diff
+      # del push no lo ve, y `secrets_clean` de verify.mjs tampoco, porque mira
+      # los ficheros trackeados actuales.
+      - name: Escaneo de secretos en TODO el historial
+        run: |
+          VER=8.30.1
+          curl -sSL -o /tmp/gitleaks.tar.gz             "https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          /tmp/gitleaks --version
+          /tmp/gitleaks git . --log-opts="--all --full-history" --redact --exit-code 1
 
       - name: El ledger no puede estar trackeado
         run: |
