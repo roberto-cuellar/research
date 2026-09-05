@@ -10,7 +10,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -352,3 +352,61 @@ async function buscarPorNombre(dir, nombre, prof = 0) {
   }
   return out;
 }
+
+// ===========================================================================
+describe('hook post-Bash — cierra el agujero de las escrituras por shell', () => {
+  const HOOK = P('governance/enforce/post-bash-hook.mjs');
+  const CONGELADO = P('governance/AUTONOMY.md');
+
+  function ejecutar(comando = 'ls') {
+    try {
+      execFileSync('node', [HOOK], {
+        input: JSON.stringify({ tool_name: 'Bash', tool_input: { command: comando } }),
+        encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      return { code: 0, stderr: '' };
+    } catch (e) {
+      return { code: e.status, stderr: e.stderr?.toString() ?? '' };
+    }
+  }
+
+  test('con el árbol intacto, permite', () => {
+    assert.equal(ejecutar().code, 0);
+  });
+
+  test('DETECTA una escritura hecha por shell, que el pre-write no ve', () => {
+    const original = readFileSync(CONGELADO);
+    try {
+      // Se escribe SIN pasar por ninguna herramienta de edición: es exactamente
+      // el camino que esquiva el hook de pre-escritura.
+      writeFileSync(CONGELADO, Buffer.concat([original, Buffer.from('\n<!-- x -->\n')]));
+      const r = ejecutar('echo x >> governance/AUTONOMY.md');
+      assert.equal(r.code, 2, 'debe denegar con exit 2');
+      assert.match(r.stderr, /ARCHIVO CONGELADO ALTERADO/);
+      assert.match(r.stderr, /AUTONOMY\.md/, 'debe nombrar el fichero exacto');
+      assert.match(r.stderr, /approvals/, 'y decir cómo regularizarlo');
+    } finally {
+      writeFileSync(CONGELADO, original);
+    }
+  });
+
+  test('detecta el borrado de un fichero congelado', () => {
+    const original = readFileSync(CONGELADO);
+    try {
+      unlinkSync(CONGELADO);
+      const r = ejecutar('rm governance/AUTONOMY.md');
+      assert.equal(r.code, 2);
+      assert.match(r.stderr, /BORRADO/);
+    } finally {
+      writeFileSync(CONGELADO, original);
+    }
+  });
+
+  test('un payload ilegible no altera la comprobación, que es por hash', () => {
+    try {
+      execFileSync('node', [HOOK], { input: 'no es json', encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+    } catch (e) {
+      assert.fail(`con el árbol intacto debe salir 0, salió ${e.status}`);
+    }
+  });
+});
